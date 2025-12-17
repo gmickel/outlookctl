@@ -56,6 +56,7 @@ uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cl
 
 | Command | Description |
 |---------|-------------|
+| `calendar calendars` | List all available calendars (including subscribed ICS) |
 | `calendar list` | List calendar events (default: next 7 days) |
 | `calendar get` | Get event details by ID |
 | `calendar create` | Create an event or meeting (draft by default) |
@@ -63,6 +64,8 @@ uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cl
 | `calendar respond` | Accept, decline, or tentatively respond to a meeting |
 | `calendar update` | Update event subject, time, location, etc. |
 | `calendar delete` | Delete/cancel an event (sends cancellations if needed) |
+
+**Tip:** Use `--calendar "Name"` to access non-default calendars (e.g., `--calendar "Family"`).
 
 ## Safety Rules
 
