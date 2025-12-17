@@ -117,11 +117,11 @@ uv run python -m outlookctl.cli calendar create --subject "Focus Time" --start "
 
 See [CLI Reference](https://gmickel.github.io/outlookctl/cli.html) for full documentation.
 
-## Installing the Claude Code Skill
+## Installing the Skill
 
-The skill enables Claude to assist with email and calendar operations safely.
+The skill enables AI assistants (Claude Code or OpenAI Codex) to assist with email and calendar operations safely.
 
-### Personal Installation
+### Claude Code - Personal Installation
 
 ```bash
 uv run python tools/install_skill.py --personal
@@ -129,7 +129,7 @@ uv run python tools/install_skill.py --personal
 
 Installs to: `~/.claude/skills/outlook-email-automation/`
 
-### Project Installation (for team)
+### Claude Code - Project Installation (for team)
 
 ```bash
 uv run python tools/install_skill.py --project
@@ -137,10 +137,21 @@ uv run python tools/install_skill.py --project
 
 Installs to: `.claude/skills/outlook-email-automation/`
 
+### OpenAI Codex Installation
+
+```bash
+uv run python tools/install_skill.py --codex
+```
+
+Installs to: `~/.codex/skills/outlook-email-automation/`
+
+> **Note:** Codex skills require the experimental `skills` feature flag. Add `[features]\nskills = true` to `~/.codex/config.toml` and restart Codex.
+
 ### Verify Installation
 
 ```bash
-uv run python tools/install_skill.py --verify --personal
+uv run python tools/install_skill.py --verify --personal  # Claude Code
+uv run python tools/install_skill.py --verify --codex     # OpenAI Codex
 ```
 
 ## Safety Features
