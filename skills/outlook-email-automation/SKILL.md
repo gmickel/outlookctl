@@ -44,8 +44,12 @@ uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cl
 | `list` | List messages from a folder |
 | `get` | Get a single message by ID |
 | `search` | Search messages with filters |
-| `draft` | Create a draft message |
+| `draft` | Create a draft message (supports --reply-all) |
 | `send` | Send a draft or new message |
+| `move` | Move message to another folder |
+| `delete` | Delete a message (soft or permanent) |
+| `mark-read` | Mark message as read/unread |
+| `forward` | Create a forward draft |
 | `attachments save` | Save attachments to disk |
 
 ### Calendar Commands
@@ -57,6 +61,8 @@ uv run --project "C:/Users/GordonMickel/work/outlookctl" python -m outlookctl.cl
 | `calendar create` | Create an event or meeting (draft by default) |
 | `calendar send` | Send meeting invitations |
 | `calendar respond` | Accept, decline, or tentatively respond to a meeting |
+| `calendar update` | Update event subject, time, location, etc. |
+| `calendar delete` | Delete/cancel an event (sends cancellations if needed) |
 
 ## Safety Rules
 

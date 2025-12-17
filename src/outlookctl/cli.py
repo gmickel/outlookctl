@@ -20,11 +20,18 @@ from .models import (
     ErrorResult,
     FolderInfo,
     MessageId,
+    # New email operation models
+    MoveResult,
+    DeleteResult,
+    MarkReadResult,
+    ForwardResult,
     # Calendar models
     CalendarListResult,
     EventCreateResult,
     EventSendResult,
     EventRespondResult,
+    EventUpdateResult,
+    EventDeleteResult,
     EventId,
 )
 from .outlook_com import (
@@ -43,6 +50,12 @@ from .outlook_com import (
     OutlookNotAvailableError,
     FolderNotFoundError,
     MessageNotFoundError,
+    # New email operations
+    move_message,
+    delete_message,
+    mark_message_read,
+    create_forward,
+    create_reply_all,
     # Calendar functions
     list_events,
     get_event_by_id,
@@ -50,6 +63,8 @@ from .outlook_com import (
     create_event,
     send_meeting_invites,
     respond_to_meeting,
+    update_event,
+    delete_event,
     EventNotFoundError,
     CalendarNotFoundError,
 )
@@ -168,13 +183,23 @@ def cmd_search(args: argparse.Namespace) -> None:
         since = parse_date(args.since) if args.since else None
         until = parse_date(args.until) if args.until else None
 
+        # Parse has_attachments flag
+        has_attachments = None
+        if args.has_attachments:
+            has_attachments = True
+        elif args.no_attachments:
+            has_attachments = False
+
         messages = list(search_messages(
             outlook,
             folder_spec=args.folder,
             query=args.query,
             from_filter=getattr(args, "from", None),
+            to_filter=args.to,
+            cc_filter=args.cc,
             subject_contains=args.subject_contains,
             unread_only=args.unread_only,
+            has_attachments=has_attachments,
             since=since,
             until=until,
             count=args.count,
@@ -187,10 +212,16 @@ def cmd_search(args: argparse.Namespace) -> None:
             query_info["text"] = args.query
         if getattr(args, "from", None):
             query_info["from"] = getattr(args, "from")
+        if args.to:
+            query_info["to"] = args.to
+        if args.cc:
+            query_info["cc"] = args.cc
         if args.subject_contains:
             query_info["subject_contains"] = args.subject_contains
         if args.unread_only:
             query_info["unread_only"] = True
+        if has_attachments is not None:
+            query_info["has_attachments"] = has_attachments
         if since:
             query_info["since"] = since.isoformat()
         if until:
@@ -217,22 +248,34 @@ def cmd_draft(args: argparse.Namespace) -> None:
         cc_list = [addr.strip() for addr in args.cc.split(",")] if args.cc else []
         bcc_list = [addr.strip() for addr in args.bcc.split(",")] if args.bcc else []
 
-        check_recipients(to_list, cc_list, bcc_list)
+        # For reply-all, we don't require recipients (they come from original)
+        if not args.reply_all:
+            check_recipients(to_list, cc_list, bcc_list)
 
         outlook = get_outlook_app()
 
-        entry_id, store_id = create_draft(
-            outlook,
-            to=to_list,
-            cc=cc_list,
-            bcc=bcc_list,
-            subject=args.subject or "",
-            body_text=args.body_text,
-            body_html=args.body_html,
-            attachments=args.attach or [],
-            reply_to_entry_id=args.reply_to_id,
-            reply_to_store_id=args.reply_to_store,
-        )
+        # Handle reply-all differently
+        if args.reply_all and args.reply_to_id and args.reply_to_store:
+            entry_id, store_id = create_reply_all(
+                outlook,
+                entry_id=args.reply_to_id,
+                store_id=args.reply_to_store,
+                body_text=args.body_text,
+                body_html=args.body_html,
+            )
+        else:
+            entry_id, store_id = create_draft(
+                outlook,
+                to=to_list,
+                cc=cc_list,
+                bcc=bcc_list,
+                subject=args.subject or "",
+                body_text=args.body_text,
+                body_html=args.body_html,
+                attachments=args.attach or [],
+                reply_to_entry_id=args.reply_to_id,
+                reply_to_store_id=args.reply_to_store,
+            )
 
         log_draft_operation(
             to=to_list,
@@ -407,6 +450,153 @@ def cmd_attachments_save(args: argparse.Namespace) -> None:
         output_error(str(e), "ATTACHMENT_ERROR")
     except Exception as e:
         output_error(str(e), "ATTACHMENT_ERROR")
+
+
+def cmd_move(args: argparse.Namespace) -> None:
+    """Move a message to another folder."""
+    try:
+        outlook = get_outlook_app()
+
+        # Get message info before moving
+        mail = get_message_by_id(outlook, args.id, args.store)
+        subject = str(mail.Subject or "")
+
+        new_entry_id, new_store_id, folder_name = move_message(
+            outlook,
+            entry_id=args.id,
+            store_id=args.store,
+            dest_folder_spec=args.dest,
+        )
+
+        result = MoveResult(
+            success=True,
+            message=f"Message moved to {folder_name}",
+            id=MessageId(entry_id=new_entry_id, store_id=new_store_id),
+            moved_to=folder_name,
+            subject=subject,
+        )
+        output_json(result.to_dict(), args.output)
+
+    except OutlookNotAvailableError as e:
+        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
+    except MessageNotFoundError as e:
+        output_error(str(e), "MESSAGE_NOT_FOUND")
+    except FolderNotFoundError as e:
+        output_error(str(e), "FOLDER_NOT_FOUND")
+    except OutlookError as e:
+        output_error(str(e), "MOVE_ERROR")
+    except Exception as e:
+        output_error(str(e), "MOVE_ERROR")
+
+
+def cmd_delete(args: argparse.Namespace) -> None:
+    """Delete a message."""
+    try:
+        outlook = get_outlook_app()
+
+        subject = delete_message(
+            outlook,
+            entry_id=args.id,
+            store_id=args.store,
+            permanent=args.permanent,
+        )
+
+        result = DeleteResult(
+            success=True,
+            message="Message deleted" if not args.permanent else "Message permanently deleted",
+            subject=subject,
+            permanent=args.permanent,
+        )
+        output_json(result.to_dict(), args.output)
+
+    except OutlookNotAvailableError as e:
+        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
+    except MessageNotFoundError as e:
+        output_error(str(e), "MESSAGE_NOT_FOUND")
+    except OutlookError as e:
+        output_error(str(e), "DELETE_ERROR")
+    except Exception as e:
+        output_error(str(e), "DELETE_ERROR")
+
+
+def cmd_mark_read(args: argparse.Namespace) -> None:
+    """Mark a message as read or unread."""
+    try:
+        outlook = get_outlook_app()
+
+        # Determine if marking as read or unread
+        mark_as_read = not args.unread
+
+        mark_message_read(
+            outlook,
+            entry_id=args.id,
+            store_id=args.store,
+            read=mark_as_read,
+        )
+
+        status = "read" if mark_as_read else "unread"
+        result = MarkReadResult(
+            success=True,
+            message=f"Message marked as {status}",
+            count=1,
+            marked_as=status,
+        )
+        output_json(result.to_dict(), args.output)
+
+    except OutlookNotAvailableError as e:
+        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
+    except MessageNotFoundError as e:
+        output_error(str(e), "MESSAGE_NOT_FOUND")
+    except OutlookError as e:
+        output_error(str(e), "MARK_ERROR")
+    except Exception as e:
+        output_error(str(e), "MARK_ERROR")
+
+
+def cmd_forward(args: argparse.Namespace) -> None:
+    """Create a forward draft for a message."""
+    try:
+        to_list = [addr.strip() for addr in args.to.split(",")] if args.to else []
+        cc_list = [addr.strip() for addr in args.cc.split(",")] if args.cc else []
+        bcc_list = [addr.strip() for addr in args.bcc.split(",")] if args.bcc else []
+
+        check_recipients(to_list, cc_list, bcc_list)
+
+        outlook = get_outlook_app()
+
+        # Get original message info
+        original = get_message_by_id(outlook, args.id, args.store)
+        original_subject = str(original.Subject or "")
+
+        entry_id, store_id = create_forward(
+            outlook,
+            entry_id=args.id,
+            store_id=args.store,
+            to=to_list,
+            cc=cc_list,
+            bcc=bcc_list,
+            additional_text=args.message,
+        )
+
+        result = ForwardResult(
+            success=True,
+            id=MessageId(entry_id=entry_id, store_id=store_id),
+            saved_to="Drafts",
+            original_subject=original_subject,
+            to=to_list,
+        )
+        output_json(result.to_dict(), args.output)
+
+    except OutlookNotAvailableError as e:
+        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
+    except MessageNotFoundError as e:
+        output_error(str(e), "MESSAGE_NOT_FOUND")
+    except ValueError as e:
+        output_error(str(e), "VALIDATION_ERROR")
+    except OutlookError as e:
+        output_error(str(e), "FORWARD_ERROR")
+    except Exception as e:
+        output_error(str(e), "FORWARD_ERROR")
 
 
 # =============================================================================
@@ -647,6 +837,94 @@ def cmd_calendar_respond(args: argparse.Namespace) -> None:
         output_error(str(e), "CALENDAR_RESPOND_ERROR")
 
 
+def cmd_calendar_update(args: argparse.Namespace) -> None:
+    """Update an existing calendar event."""
+    try:
+        outlook = get_outlook_app()
+
+        # Parse times if provided
+        start = parse_datetime(args.start) if args.start else None
+        end = parse_datetime(args.end) if args.end else None
+
+        # Get event info before update
+        appt = get_event_by_id(outlook, args.id, args.store)
+        subject = str(appt.Subject or "")
+
+        updated_fields = update_event(
+            outlook,
+            entry_id=args.id,
+            store_id=args.store,
+            subject=args.subject,
+            start=start,
+            end=end,
+            duration=args.duration,
+            location=args.location,
+            body=args.body,
+            reminder_minutes=args.reminder,
+            busy_status=args.busy_status,
+        )
+
+        # Get updated subject if it changed
+        if "subject" in updated_fields:
+            subject = args.subject
+
+        result = EventUpdateResult(
+            success=True,
+            message=f"Event updated: {', '.join(updated_fields)}" if updated_fields else "No changes made",
+            id=EventId(entry_id=args.id, store_id=args.store),
+            subject=subject,
+            start=start.isoformat() if start else None,
+            updated_fields=updated_fields,
+        )
+        output_json(result.to_dict(), args.output)
+
+    except OutlookNotAvailableError as e:
+        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
+    except EventNotFoundError as e:
+        output_error(str(e), "EVENT_NOT_FOUND")
+    except ValueError as e:
+        output_error(str(e), "VALIDATION_ERROR")
+    except OutlookError as e:
+        output_error(str(e), "CALENDAR_UPDATE_ERROR")
+    except Exception as e:
+        output_error(str(e), "CALENDAR_UPDATE_ERROR")
+
+
+def cmd_calendar_delete(args: argparse.Namespace) -> None:
+    """Delete a calendar event."""
+    try:
+        outlook = get_outlook_app()
+
+        subject, was_cancelled = delete_event(
+            outlook,
+            entry_id=args.id,
+            store_id=args.store,
+            send_cancellation=not args.no_cancel,
+        )
+
+        if was_cancelled:
+            message = "Meeting deleted and cancellation sent to attendees"
+        else:
+            message = "Event deleted"
+
+        result = EventDeleteResult(
+            success=True,
+            message=message,
+            subject=subject,
+            cancelled=was_cancelled,
+        )
+        output_json(result.to_dict(), args.output)
+
+    except OutlookNotAvailableError as e:
+        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
+    except EventNotFoundError as e:
+        output_error(str(e), "EVENT_NOT_FOUND")
+    except OutlookError as e:
+        output_error(str(e), "CALENDAR_DELETE_ERROR")
+    except Exception as e:
+        output_error(str(e), "CALENDAR_DELETE_ERROR")
+
+
 def create_parser() -> argparse.ArgumentParser:
     """Create the argument parser."""
     parser = argparse.ArgumentParser(
@@ -748,11 +1026,25 @@ def create_parser() -> argparse.ArgumentParser:
         "--from", dest="from", help="Filter by sender email or name"
     )
     search_parser.add_argument(
+        "--to", help="Filter by To recipient email or name"
+    )
+    search_parser.add_argument(
+        "--cc", help="Filter by CC recipient email or name"
+    )
+    search_parser.add_argument(
         "--subject-contains", help="Filter by subject content"
     )
     search_parser.add_argument(
         "--unread-only", action="store_true",
         help="Only return unread messages"
+    )
+    search_parser.add_argument(
+        "--has-attachments", action="store_true",
+        help="Only return messages with attachments"
+    )
+    search_parser.add_argument(
+        "--no-attachments", action="store_true",
+        help="Only return messages without attachments"
     )
     search_parser.add_argument(
         "--since", help="Only messages after this date (ISO format)"
@@ -809,6 +1101,10 @@ def create_parser() -> argparse.ArgumentParser:
     )
     draft_parser.add_argument(
         "--reply-to-store", help="Store ID of message to reply to"
+    )
+    draft_parser.add_argument(
+        "--reply-all", action="store_true",
+        help="Create reply-all instead of reply (use with --reply-to-id/--reply-to-store)"
     )
     draft_parser.add_argument(
         "--output", choices=["json", "text"], default="json",
@@ -899,6 +1195,94 @@ def create_parser() -> argparse.ArgumentParser:
         help="Output format (default: json)"
     )
     save_parser.set_defaults(func=cmd_attachments_save)
+
+    # Move command
+    move_parser = subparsers.add_parser(
+        "move", help="Move a message to another folder"
+    )
+    move_parser.add_argument(
+        "--id", required=True, help="Message entry ID"
+    )
+    move_parser.add_argument(
+        "--store", required=True, help="Message store ID"
+    )
+    move_parser.add_argument(
+        "--dest", required=True,
+        help="Destination folder: inbox|sent|drafts|deleted|by-name:<name>|by-path:<path>"
+    )
+    move_parser.add_argument(
+        "--output", choices=["json", "text"], default="json",
+        help="Output format (default: json)"
+    )
+    move_parser.set_defaults(func=cmd_move)
+
+    # Delete command
+    delete_parser = subparsers.add_parser(
+        "delete", help="Delete a message"
+    )
+    delete_parser.add_argument(
+        "--id", required=True, help="Message entry ID"
+    )
+    delete_parser.add_argument(
+        "--store", required=True, help="Message store ID"
+    )
+    delete_parser.add_argument(
+        "--permanent", action="store_true",
+        help="Permanently delete (skip Deleted Items)"
+    )
+    delete_parser.add_argument(
+        "--output", choices=["json", "text"], default="json",
+        help="Output format (default: json)"
+    )
+    delete_parser.set_defaults(func=cmd_delete)
+
+    # Mark-read command
+    mark_parser = subparsers.add_parser(
+        "mark-read", help="Mark a message as read or unread"
+    )
+    mark_parser.add_argument(
+        "--id", required=True, help="Message entry ID"
+    )
+    mark_parser.add_argument(
+        "--store", required=True, help="Message store ID"
+    )
+    mark_parser.add_argument(
+        "--unread", action="store_true",
+        help="Mark as unread instead of read"
+    )
+    mark_parser.add_argument(
+        "--output", choices=["json", "text"], default="json",
+        help="Output format (default: json)"
+    )
+    mark_parser.set_defaults(func=cmd_mark_read)
+
+    # Forward command
+    forward_parser = subparsers.add_parser(
+        "forward", help="Create a forward draft for a message"
+    )
+    forward_parser.add_argument(
+        "--id", required=True, help="Original message entry ID"
+    )
+    forward_parser.add_argument(
+        "--store", required=True, help="Original message store ID"
+    )
+    forward_parser.add_argument(
+        "--to", required=True, help="To recipients (comma-separated)"
+    )
+    forward_parser.add_argument(
+        "--cc", help="CC recipients (comma-separated)"
+    )
+    forward_parser.add_argument(
+        "--bcc", help="BCC recipients (comma-separated)"
+    )
+    forward_parser.add_argument(
+        "--message", help="Additional message to prepend to the forward"
+    )
+    forward_parser.add_argument(
+        "--output", choices=["json", "text"], default="json",
+        help="Output format (default: json)"
+    )
+    forward_parser.set_defaults(func=cmd_forward)
 
     # =========================================================================
     # Calendar subcommand
@@ -1064,6 +1448,67 @@ def create_parser() -> argparse.ArgumentParser:
         help="Output format (default: json)"
     )
     cal_respond_parser.set_defaults(func=cmd_calendar_respond)
+
+    # Calendar update
+    cal_update_parser = calendar_subparsers.add_parser(
+        "update", help="Update an existing calendar event"
+    )
+    cal_update_parser.add_argument(
+        "--id", required=True, help="Event entry ID"
+    )
+    cal_update_parser.add_argument(
+        "--store", required=True, help="Event store ID"
+    )
+    cal_update_parser.add_argument(
+        "--subject", help="New event subject"
+    )
+    cal_update_parser.add_argument(
+        "--start", help="New start time (YYYY-MM-DD HH:MM)"
+    )
+    cal_update_parser.add_argument(
+        "--end", help="New end time (YYYY-MM-DD HH:MM)"
+    )
+    cal_update_parser.add_argument(
+        "--duration", type=int, help="New duration in minutes"
+    )
+    cal_update_parser.add_argument(
+        "--location", help="New event location"
+    )
+    cal_update_parser.add_argument(
+        "--body", help="New event description"
+    )
+    cal_update_parser.add_argument(
+        "--reminder", type=int, help="New reminder minutes before event"
+    )
+    cal_update_parser.add_argument(
+        "--busy-status", choices=["free", "tentative", "busy", "out_of_office", "working_elsewhere"],
+        help="New show-as status"
+    )
+    cal_update_parser.add_argument(
+        "--output", choices=["json", "text"], default="json",
+        help="Output format (default: json)"
+    )
+    cal_update_parser.set_defaults(func=cmd_calendar_update)
+
+    # Calendar delete
+    cal_delete_parser = calendar_subparsers.add_parser(
+        "delete", help="Delete a calendar event"
+    )
+    cal_delete_parser.add_argument(
+        "--id", required=True, help="Event entry ID"
+    )
+    cal_delete_parser.add_argument(
+        "--store", required=True, help="Event store ID"
+    )
+    cal_delete_parser.add_argument(
+        "--no-cancel", action="store_true",
+        help="Don't send cancellation to attendees (for meetings)"
+    )
+    cal_delete_parser.add_argument(
+        "--output", choices=["json", "text"], default="json",
+        help="Output format (default: json)"
+    )
+    cal_delete_parser.set_defaults(func=cmd_calendar_delete)
 
     return parser
 

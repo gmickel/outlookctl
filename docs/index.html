@@ -758,7 +758,7 @@
             </span>
             <span class="badge">
               <svg class="badge-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-              Claude Code Skill
+              AI Skills (Claude &amp; Codex)
             </span>
           </div>
           <div class="hero-actions">
@@ -984,14 +984,18 @@ uv run python -m outlookctl.cli doctor
           </div>
 
           <div class="qs-step">
-            <h3><span>4</span> Install the Claude Code Skill (optional)</h3>
+            <h3><span>4</span> Install AI Skill (optional)</h3>
             <div class="code-block">
               <div class="code-header">
                 <span class="code-lang">bash</span>
                 <button class="code-copy">Copy</button>
               </div>
               <div class="code-content">
+# For Claude Code
 uv run python tools/install_skill.py --personal
+
+# For OpenAI Codex
+uv run python tools/install_skill.py --codex
               </div>
             </div>
           </div>

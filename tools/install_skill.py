@@ -2,13 +2,15 @@
 """
 Skill installer for outlook-email-automation.
 
-This script installs the Claude Code Skill to either:
-- Personal location: ~/.claude/skills/outlook-email-automation/
-- Project location: .claude/skills/outlook-email-automation/
+This script installs the Skill to:
+- Claude Code personal: ~/.claude/skills/outlook-email-automation/
+- Claude Code project: .claude/skills/outlook-email-automation/
+- OpenAI Codex: ~/.codex/skills/outlook-email-automation/
 
 Usage:
-    python tools/install_skill.py --personal    # Install for current user
-    python tools/install_skill.py --project     # Install in current repo
+    python tools/install_skill.py --personal    # Install for Claude Code (personal)
+    python tools/install_skill.py --project     # Install for Claude Code (project)
+    python tools/install_skill.py --codex       # Install for OpenAI Codex
     python tools/install_skill.py --uninstall --personal  # Remove personal install
     python tools/install_skill.py --verify --personal     # Verify installation
 """
@@ -53,6 +55,12 @@ def get_personal_skill_dir() -> Path:
 def get_project_skill_dir() -> Path:
     """Get the project skill installation directory."""
     return Path.cwd() / ".claude" / "skills" / SKILL_NAME
+
+
+def get_codex_skill_dir() -> Path:
+    """Get the OpenAI Codex skill installation directory."""
+    home = Path.home()
+    return home / ".codex" / "skills" / SKILL_NAME
 
 
 def backup_existing(dest_dir: Path) -> Path | None:
@@ -177,6 +185,8 @@ def install(
         dest_dir = get_personal_skill_dir()
     elif target == "project":
         dest_dir = get_project_skill_dir()
+    elif target == "codex":
+        dest_dir = get_codex_skill_dir()
     else:
         print(f"ERROR: Invalid target: {target}")
         return False
@@ -204,19 +214,24 @@ def install(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Install outlook-email-automation skill for Claude Code"
+        description="Install outlook-email-automation skill for Claude Code or OpenAI Codex"
     )
 
     target_group = parser.add_mutually_exclusive_group(required=True)
     target_group.add_argument(
         "--personal",
         action="store_true",
-        help="Install to ~/.claude/skills/ (personal)",
+        help="Install to ~/.claude/skills/ (Claude Code personal)",
     )
     target_group.add_argument(
         "--project",
         action="store_true",
-        help="Install to .claude/skills/ (current project)",
+        help="Install to .claude/skills/ (Claude Code project)",
+    )
+    target_group.add_argument(
+        "--codex",
+        action="store_true",
+        help="Install to ~/.codex/skills/ (OpenAI Codex)",
     )
 
     action_group = parser.add_mutually_exclusive_group()
@@ -245,13 +260,26 @@ def main():
 
     args = parser.parse_args()
 
-    target = "personal" if args.personal else "project"
+    if args.personal:
+        target = "personal"
+    elif args.codex:
+        target = "codex"
+    else:
+        target = "project"
+
+    def get_dest_dir():
+        if args.personal:
+            return get_personal_skill_dir()
+        elif args.codex:
+            return get_codex_skill_dir()
+        else:
+            return get_project_skill_dir()
 
     if args.uninstall:
-        dest_dir = get_personal_skill_dir() if args.personal else get_project_skill_dir()
+        dest_dir = get_dest_dir()
         success = uninstall_skill(dest_dir)
     elif args.verify:
-        dest_dir = get_personal_skill_dir() if args.personal else get_project_skill_dir()
+        dest_dir = get_dest_dir()
         success = verify_installation(dest_dir)
     else:
         success = install(
