@@ -660,7 +660,7 @@ def cmd_calendar_list(args: argparse.Namespace) -> None:
 
         # Handle --all flag to query all calendars
         if getattr(args, 'all', False):
-            from outlookctl.outlook_com import list_all_calendars, list_events_from_folder
+            from outlookctl.outlook_com import list_events_from_folder
 
             calendars = list_all_calendars(outlook)
             all_events = []
