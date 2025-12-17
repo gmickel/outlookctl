@@ -51,6 +51,16 @@ class TestParseRecipientArgs:
         )
         assert to_list == ["single@example.com"]
 
+    def test_trailing_comma(self):
+        """Trailing comma should not produce empty string in list."""
+        to_list, cc_list, bcc_list = parse_recipient_args(
+            to="alice@example.com,",
+            cc=None,
+            bcc=None,
+        )
+        assert to_list == ["alice@example.com"]
+        assert "" not in to_list
+
 
 class TestParseDate:
     def test_iso_date(self):

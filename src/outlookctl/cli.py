@@ -59,6 +59,7 @@ from .outlook_com import (
     create_reply_all,
     # Calendar functions
     list_events,
+    list_all_calendars,
     get_event_by_id,
     extract_event_detail,
     create_event,
@@ -151,9 +152,9 @@ def parse_recipient_args(
     Returns:
         Tuple of (to_list, cc_list, bcc_list)
     """
-    to_list = [addr.strip() for addr in to.split(",")] if to else []
-    cc_list = [addr.strip() for addr in cc.split(",")] if cc else []
-    bcc_list = [addr.strip() for addr in bcc.split(",")] if bcc else []
+    to_list = [addr.strip() for addr in to.split(",") if addr.strip()] if to else []
+    cc_list = [addr.strip() for addr in cc.split(",") if addr.strip()] if cc else []
+    bcc_list = [addr.strip() for addr in bcc.split(",") if addr.strip()] if bcc else []
     return to_list, cc_list, bcc_list
 
 
@@ -182,7 +183,7 @@ def cmd_doctor(args: argparse.Namespace) -> None:
 def cmd_list(args: argparse.Namespace) -> None:
     """List messages from a folder."""
     outlook = get_outlook_app()
-    folder, folder_info = resolve_folder(outlook, args.folder)
+    _folder, folder_info = resolve_folder(outlook, args.folder)
 
     since = parse_date(args.since) if args.since else None
     until = parse_date(args.until) if args.until else None
@@ -282,6 +283,8 @@ def cmd_search(args: argparse.Namespace) -> None:
 
 def cmd_draft(args: argparse.Namespace) -> None:
     """Create a draft message."""
+    # Initialize recipient lists before try block for error logging
+    to_list, cc_list, bcc_list = [], [], []
     try:
         to_list, cc_list, bcc_list = parse_recipient_args(args.to, args.cc, args.bcc)
 
@@ -340,9 +343,9 @@ def cmd_draft(args: argparse.Namespace) -> None:
         output_error(str(e), "VALIDATION_ERROR")
     except OutlookError as e:
         log_draft_operation(
-            to=to_list if "to_list" in dir() else [],
-            cc=cc_list if "cc_list" in dir() else [],
-            bcc=bcc_list if "bcc_list" in dir() else [],
+            to=to_list,
+            cc=cc_list,
+            bcc=bcc_list,
             subject=args.subject or "",
             success=False,
             error=str(e),
@@ -618,9 +621,6 @@ def parse_datetime(dt_str: str) -> datetime:
 @handle_outlook_errors("CALENDARS_LIST_ERROR")
 def cmd_calendar_calendars(args: argparse.Namespace) -> None:
     """List all available calendars."""
-    from outlookctl.outlook_com import list_all_calendars
-    from outlookctl.models import CalendarsResult, CalendarInfo
-
     outlook = get_outlook_app()
     calendars = list_all_calendars(outlook)
 

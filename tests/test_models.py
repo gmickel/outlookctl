@@ -21,6 +21,7 @@ from outlookctl.models import (
     ErrorResult,
     CalendarInfo,
     CalendarsResult,
+    EventId,
     EventUpdateResult,
     EventDeleteResult,
 )
@@ -292,7 +293,6 @@ class TestCalendarsResult:
 
 class TestEventUpdateResult:
     def test_to_dict(self):
-        from outlookctl.models import EventId
         result = EventUpdateResult(
             success=True,
             message="Event updated",

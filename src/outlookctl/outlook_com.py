@@ -1149,14 +1149,17 @@ def delete_message(
                 # Already in Deleted Items - this delete is permanent
                 mail.Delete()
             else:
+                # Capture received time for more precise matching after delete
+                received_time = mail.ReceivedTime
                 # First delete moves to Deleted Items
                 mail.Delete()
                 # Now find and delete from Deleted Items
-                # Search by subject and approximate time (items in Deleted Items)
+                # Search by subject AND received time for precise matching
                 try:
                     for item in iter_com_collection(deleted_folder.Items):
                         if (item.Class == OL_ITEM_CLASS_MAIL and
-                            str(item.Subject or "") == subject):
+                            str(item.Subject or "") == subject and
+                            item.ReceivedTime == received_time):
                             item.Delete()
                             break
                 except Exception:
