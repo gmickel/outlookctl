@@ -1,5 +1,5 @@
 ---
-name: outlook-email-automation
+name: outlook-automation
 description: >
   Automates reading, searching, drafting, and sending emails AND calendar events
   in Classic Outlook on Windows using local COM automation. Use this skill when
@@ -9,7 +9,7 @@ description: >
   Classic Outlook (not New Outlook) to be running.
 ---
 
-# Outlook Email & Calendar Automation
+# Outlook Automation
 
 This skill enables email and calendar automation through Classic Outlook on Windows using the `outlookctl` CLI tool.
 

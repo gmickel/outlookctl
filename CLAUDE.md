@@ -118,14 +118,14 @@ except SendConfirmationError as e:
 
 ### Skill Location
 
-- **Personal**: `~/.claude/skills/outlook-email-automation/`
-- **Project**: `.claude/skills/outlook-email-automation/`
+- **Personal**: `~/.claude/skills/outlook-automation/`
+- **Project**: `.claude/skills/outlook-automation/`
 
 ### SKILL.md Structure
 
 ```yaml
 ---
-name: outlook-email-automation
+name: outlook-automation
 description: >
   Brief description for Claude to understand when to use this skill...
 ---
@@ -191,7 +191,7 @@ Add to `outlook_com.py`, following existing patterns:
 After any changes to CLI or behavior:
 
 ```bash
-# Update skill files in skills/outlook-email-automation/
+# Update skill files in skills/outlook-automation/
 # Then reinstall:
 uv run python tools/install_skill.py --personal
 ```
@@ -254,8 +254,8 @@ uv sync  # Ensure dependencies are installed
 |------|---------|
 | `pyproject.toml` | Project config, dependencies |
 | `src/outlookctl/` | Main Python package |
-| `skills/outlook-email-automation/SKILL.md` | Skill definition |
-| `skills/outlook-email-automation/reference/` | Skill documentation |
+| `skills/outlook-automation/SKILL.md` | Skill definition |
+| `skills/outlook-automation/reference/` | Skill documentation |
 | `tools/install_skill.py` | Skill installer |
 | `tests/` | pytest tests |
 | `evals/` | Skill evaluation scenarios |

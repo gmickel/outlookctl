@@ -1,6 +1,6 @@
 # Skill Evaluations
 
-This directory contains evaluation scenarios for testing the outlook-email-automation skill with Claude.
+This directory contains evaluation scenarios for testing the outlook-automation skill with Claude.
 
 ## Scenarios
 

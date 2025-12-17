@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Skill installer for outlook-email-automation.
+Skill installer for outlook-automation.
 
 This script installs the Skill to:
-- Claude Code personal: ~/.claude/skills/outlook-email-automation/
-- Claude Code project: .claude/skills/outlook-email-automation/
-- OpenAI Codex: ~/.codex/skills/outlook-email-automation/
+- Claude Code personal: ~/.claude/skills/outlook-automation/
+- Claude Code project: .claude/skills/outlook-automation/
+- OpenAI Codex: ~/.codex/skills/outlook-automation/
 
 Usage:
     python tools/install_skill.py --personal    # Install for Claude Code (personal)
@@ -24,7 +24,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-SKILL_NAME = "outlook-email-automation"
+SKILL_NAME = "outlook-automation"
 
 
 def get_skill_source_dir() -> Path:
@@ -214,7 +214,7 @@ def install(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Install outlook-email-automation skill for Claude Code or OpenAI Codex"
+        description="Install outlook-automation skill for Claude Code or OpenAI Codex"
     )
 
     target_group = parser.add_mutually_exclusive_group(required=True)

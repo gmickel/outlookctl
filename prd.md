@@ -108,7 +108,7 @@ Classic Outlook exposes a COM automation model accessible locally via `pywin32` 
    * Produces deterministic **JSON** for Claude to parse.
    * Contains safety gates for sending.
 
-2. **Claude Code Skill (`outlook-email-automation`)**
+2. **Claude Code Skill (`outlook-automation`)**
 
    * `SKILL.md` + minimal supporting docs + scripts
    * Provides workflows and “guardrail patterns” for Claude (draft-first; send-confirm).
@@ -301,7 +301,7 @@ Because email content may be sensitive:
 
 ### 9.3 Skill scope and triggers
 
-**Skill name (example)**: `outlook-email-automation`
+**Skill name (example)**: `outlook-automation`
 
 **Description (example)**
 
@@ -317,7 +317,7 @@ Keep `SKILL.md` concise and link to one-level-deep references.
 Recommended skill folder (both personal and project installs):
 
 ```
-outlook-email-automation/
+outlook-automation/
   SKILL.md
   reference/
     cli.md
@@ -366,11 +366,11 @@ Provide a Python executable entrypoint (stdlib-only preferred) that can:
 
 **Install personal skill**
 
-* Copy `outlook-email-automation/` → `~/.claude/skills/outlook-email-automation/`
+* Copy `outlook-automation/` → `~/.claude/skills/outlook-automation/`
 
 **Install project skill**
 
-* Copy `outlook-email-automation/` → `<cwd>/.claude/skills/outlook-email-automation/`
+* Copy `outlook-automation/` → `<cwd>/.claude/skills/outlook-automation/`
 
 **Idempotency**
 
@@ -520,7 +520,7 @@ outlook-claude-skill/
     safety.py                   # send confirmation gates
 
   skills/
-    outlook-email-automation/
+    outlook-automation/
       SKILL.md
       reference/
         cli.md

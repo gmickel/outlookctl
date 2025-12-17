@@ -127,7 +127,7 @@ The skill enables AI assistants (Claude Code or OpenAI Codex) to assist with ema
 uv run python tools/install_skill.py --personal
 ```
 
-Installs to: `~/.claude/skills/outlook-email-automation/`
+Installs to: `~/.claude/skills/outlook-automation/`
 
 ### Claude Code - Project Installation (for team)
 
@@ -135,7 +135,7 @@ Installs to: `~/.claude/skills/outlook-email-automation/`
 uv run python tools/install_skill.py --project
 ```
 
-Installs to: `.claude/skills/outlook-email-automation/`
+Installs to: `.claude/skills/outlook-automation/`
 
 ### OpenAI Codex Installation
 
@@ -143,7 +143,7 @@ Installs to: `.claude/skills/outlook-email-automation/`
 uv run python tools/install_skill.py --codex
 ```
 
-Installs to: `~/.codex/skills/outlook-email-automation/`
+Installs to: `~/.codex/skills/outlook-automation/`
 
 > **Note:** Codex skills require the experimental `skills` feature flag. Add `[features]\nskills = true` to `~/.codex/config.toml` and restart Codex.
 
@@ -218,7 +218,7 @@ outlookctl/
 │   ├── safety.py               # Send confirmation gates
 │   └── audit.py                # Audit logging
 ├── skills/
-│   └── outlook-email-automation/
+│   └── outlook-automation/
 │       ├── SKILL.md            # Claude Code Skill definition
 │       └── reference/          # Skill documentation
 │           ├── cli.md
