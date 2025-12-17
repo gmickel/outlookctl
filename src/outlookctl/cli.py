@@ -671,21 +671,64 @@ def cmd_calendar_list(args: argparse.Namespace) -> None:
         else:
             end_date = start_date + timedelta(days=7)
 
-        events = list(list_events(
-            outlook,
-            start_date=start_date,
-            end_date=end_date,
-            calendar_email=args.calendar,
-            count=args.count,
-        ))
+        # Handle --all flag to query all calendars
+        if getattr(args, 'all', False):
+            from outlookctl.outlook_com import list_all_calendars, list_events_from_folder
 
-        result = CalendarListResult(
-            calendar=args.calendar or "Calendar",
-            start_date=start_date.isoformat(),
-            end_date=end_date.isoformat(),
-            items=events,
-        )
-        output_json(result.to_dict(), args.output)
+            calendars = list_all_calendars(outlook)
+            all_events = []
+
+            for cal in calendars:
+                try:
+                    namespace = outlook.GetNamespace("MAPI")
+                    folder = namespace.GetFolderFromID(cal["entry_id"], cal["store_id"])
+                    events = list(list_events_from_folder(
+                        folder,
+                        start_date=start_date,
+                        end_date=end_date,
+                        count=args.count,
+                    ))
+                    # Add calendar name to each event
+                    for event in events:
+                        event.calendar_name = cal["name"]
+                    all_events.extend(events)
+                except Exception:
+                    continue  # Skip calendars that fail
+
+            # Sort all events by start time
+            all_events.sort(key=lambda e: e.start)
+
+            # Limit total count
+            if len(all_events) > args.count:
+                all_events = all_events[:args.count]
+
+            result = {
+                "version": "1.0",
+                "calendars": "all",
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "items": [
+                    {**event.to_dict(), "calendar": event.calendar_name}
+                    for event in all_events
+                ],
+            }
+            output_json(result, args.output)
+        else:
+            events = list(list_events(
+                outlook,
+                start_date=start_date,
+                end_date=end_date,
+                calendar_email=args.calendar,
+                count=args.count,
+            ))
+
+            result = CalendarListResult(
+                calendar=args.calendar or "Calendar",
+                start_date=start_date.isoformat(),
+                end_date=end_date.isoformat(),
+                items=events,
+            )
+            output_json(result.to_dict(), args.output)
 
     except OutlookNotAvailableError as e:
         output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
@@ -1349,6 +1392,10 @@ def create_parser() -> argparse.ArgumentParser:
     cal_list_parser.add_argument(
         "--calendar",
         help="Calendar: name, 'by-name:Name', or email for shared calendar"
+    )
+    cal_list_parser.add_argument(
+        "--all", action="store_true",
+        help="Query ALL calendars and merge results (overrides --calendar)"
     )
     cal_list_parser.add_argument(
         "--count", type=int, default=100,

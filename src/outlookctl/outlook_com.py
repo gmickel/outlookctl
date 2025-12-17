@@ -1848,6 +1848,66 @@ def list_events(
             continue
 
 
+def list_events_from_folder(
+    folder,
+    start_date: datetime,
+    end_date: datetime,
+    count: int = 100,
+) -> Iterator[EventSummary]:
+    """
+    List events from a specific calendar folder.
+
+    Args:
+        folder: Calendar folder COM object
+        start_date: Start of date range
+        end_date: End of date range
+        count: Maximum number of events to return
+
+    Yields:
+        EventSummary objects
+    """
+    items = folder.Items
+
+    # Important: Set IncludeRecurrences BEFORE sorting
+    items.IncludeRecurrences = True
+    items.Sort("[Start]")
+
+    # Build date filter
+    start_str = start_date.strftime("%m/%d/%Y %H:%M %p")
+    end_str = end_date.strftime("%m/%d/%Y %H:%M %p")
+
+    restriction = f"[Start] >= '{start_str}' AND [Start] <= '{end_str}'"
+
+    try:
+        items = items.Restrict(restriction)
+    except Exception:
+        pass
+
+    yielded = 0
+    for item in items:
+        if yielded >= count:
+            break
+
+        try:
+            if item.Class != 26:  # olAppointment
+                continue
+
+            item_start = item.Start
+            if hasattr(item_start, 'replace'):
+                item_start_naive = item_start.replace(tzinfo=None)
+            else:
+                item_start_naive = item_start
+
+            if item_start_naive < start_date or item_start_naive > end_date:
+                continue
+
+            yield extract_event_summary(item)
+            yielded += 1
+
+        except Exception:
+            continue
+
+
 def create_event(
     outlook_app,
     subject: str,
