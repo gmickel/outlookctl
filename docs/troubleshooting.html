@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Troubleshooting - outlookctl</title>
+  <meta name="description" content="Common issues and solutions for outlookctl.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #0a0e14;
+      --bg-secondary: #0d1117;
+      --bg-tertiary: #161b22;
+      --bg-card: #1a1f26;
+      --bg-code: #0d1117;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-cyan: #00d9ff;
+      --accent-blue: #58a6ff;
+      --accent-purple: #a371f7;
+      --accent-green: #3fb950;
+      --accent-orange: #f0883e;
+      --accent-red: #f85149;
+      --accent-yellow: #d29922;
+      --border-subtle: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --glow-cyan: rgba(0, 217, 255, 0.1);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Outfit', system-ui, sans-serif;
+      --sidebar-width: 280px;
+      --header-height: 64px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--header-height) + 24px);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(0, 217, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 217, 255, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: rgba(10, 14, 20, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .logo-text span {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .header-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .header-nav a:hover {
+      color: var(--accent-cyan);
+    }
+
+    .header-nav a.active {
+      color: var(--accent-cyan);
+    }
+
+    .btn-github {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-github:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px var(--glow-cyan);
+    }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      padding-top: var(--header-height);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      width: var(--sidebar-width);
+      height: calc(100vh - var(--header-height));
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-subtle);
+      overflow-y: auto;
+      padding: 24px 0;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent-cyan);
+      background: rgba(0, 217, 255, 0.05);
+      border-left-color: var(--accent-cyan);
+    }
+
+    .sidebar-nav .icon {
+      font-size: 0.8rem;
+      width: 18px;
+      text-align: center;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 48px 64px;
+      max-width: calc(100% - var(--sidebar-width));
+    }
+
+    .content {
+      max-width: 900px;
+    }
+
+    /* Page header */
+    .page-header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .page-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent-orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-header p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Quick start box */
+    .quick-start {
+      background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(88, 166, 255, 0.1));
+      border: 1px solid rgba(0, 217, 255, 0.2);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 48px;
+    }
+
+    .quick-start h3 {
+      color: var(--accent-cyan);
+      font-size: 1rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-start p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* Section styling */
+    .section {
+      margin-bottom: 48px;
+      scroll-margin-top: calc(var(--header-height) + 24px);
+    }
+
+    .section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section h2::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(180deg, var(--accent-orange), var(--accent-yellow));
+      border-radius: 2px;
+    }
+
+    /* Issue card */
+    .issue-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .issue-card:hover {
+      border-color: rgba(240, 136, 62, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .issue-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .issue-title {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--accent-orange);
+    }
+
+    .issue-code {
+      padding: 4px 8px;
+      background: rgba(248, 81, 73, 0.1);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-red);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .issue-body {
+      padding: 20px;
+    }
+
+    /* Symptoms */
+    .symptoms {
+      margin-bottom: 20px;
+    }
+
+    .symptoms h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .symptoms ul {
+      list-style: none;
+    }
+
+    .symptoms li {
+      padding: 6px 0;
+      color: var(--text-secondary);
+      padding-left: 20px;
+      position: relative;
+      font-size: 0.9rem;
+    }
+
+    .symptoms li::before {
+      content: "\2022";
+      color: var(--accent-red);
+      position: absolute;
+      left: 0;
+    }
+
+    .symptoms code {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-red);
+      background: rgba(248, 81, 73, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Solutions */
+    .solutions {
+      margin-top: 20px;
+    }
+
+    .solutions h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .solution-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: rgba(63, 185, 80, 0.05);
+      border: 1px solid rgba(63, 185, 80, 0.15);
+      border-radius: 8px;
+    }
+
+    .solution-num {
+      width: 24px;
+      height: 24px;
+      background: rgba(63, 185, 80, 0.2);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent-green);
+      flex-shrink: 0;
+    }
+
+    .solution-content {
+      flex: 1;
+    }
+
+    .solution-content h5 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .solution-content p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* Code blocks */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .code-lang {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .code-copy {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .code-copy:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .code-copy.copied {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .code-content {
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-content::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .code-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .code-content::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    /* Syntax highlighting */
+    .syn-cmd { color: var(--accent-cyan); }
+    .syn-flag { color: var(--accent-orange); }
+    .syn-value { color: var(--accent-green); }
+    .syn-comment { color: var(--text-muted); font-style: italic; }
+    .syn-string { color: var(--accent-yellow); }
+
+    /* Environment section */
+    .env-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .env-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .env-card h4 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .env-card h4 span {
+      font-size: 1.2rem;
+    }
+
+    .env-card p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .env-card code {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      background: rgba(0, 217, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Help section */
+    .help-steps {
+      margin: 24px 0;
+    }
+
+    .help-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+    }
+
+    .help-step-num {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--accent-cyan);
+      flex-shrink: 0;
+    }
+
+    .help-step-content {
+      flex: 1;
+    }
+
+    .help-step-content p {
+      color: var(--text-secondary);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .help-step-content code {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      background: rgba(0, 217, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 32px 24px;
+        max-width: 100%;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">&#9993;</div>
+        <div class="logo-text">outlookctl <span>/ docs</span></div>
+      </a>
+      <nav class="header-nav">
+        <a href="index.html">Home</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="json-schema.html">JSON Schema</a>
+        <a href="security.html">Security</a>
+        <a href="troubleshooting.html" class="active">Troubleshooting</a>
+        <a href="https://github.com/gmickel/outlookctl" class="btn-github">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Quick Start</div>
+        <ul class="sidebar-nav">
+          <li><a href="#diagnostics"><span class="icon">&#9881;</span> Run Diagnostics</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Common Issues</div>
+        <ul class="sidebar-nav">
+          <li><a href="#outlook-unavailable"><span class="icon">&#9888;</span> Outlook Unavailable</a></li>
+          <li><a href="#pywin32-missing"><span class="icon">&#9888;</span> pywin32 Missing</a></li>
+          <li><a href="#folder-not-found"><span class="icon">&#9888;</span> Folder Not Found</a></li>
+          <li><a href="#message-not-found"><span class="icon">&#9888;</span> Message Not Found</a></li>
+          <li><a href="#confirmation-required"><span class="icon">&#9888;</span> Confirmation Required</a></li>
+          <li><a href="#attachment-errors"><span class="icon">&#9888;</span> Attachment Errors</a></li>
+          <li><a href="#encoding-errors"><span class="icon">&#9888;</span> Encoding Errors</a></li>
+          <li><a href="#security-prompts"><span class="icon">&#9888;</span> Security Prompts</a></li>
+          <li><a href="#slow-performance"><span class="icon">&#9888;</span> Slow Performance</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Environment</div>
+        <ul class="sidebar-nav">
+          <li><a href="#environment"><span class="icon">&#128187;</span> Special Environments</a></li>
+          <li><a href="#getting-help"><span class="icon">&#10067;</span> Getting Help</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <div class="content">
+        <!-- Page header -->
+        <div class="page-header">
+          <h1>Troubleshooting</h1>
+          <p>Common issues and solutions for outlookctl.</p>
+        </div>
+
+        <!-- Quick start -->
+        <section id="diagnostics" class="quick-start">
+          <h3>&#9881; Quick Diagnostics</h3>
+          <p>Always start with the doctor command to check all prerequisites:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="code-copy">Copy</button>
+            </div>
+            <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">doctor</span></div>
+          </div>
+          <p style="margin: 0; font-size: 0.9rem;">This checks all prerequisites and provides specific remediation advice.</p>
+        </section>
+
+        <!-- Outlook Unavailable -->
+        <section id="outlook-unavailable" class="section">
+          <h2>Outlook COM Unavailable</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"Outlook COM automation unavailable"</span>
+              <span class="issue-code">OUTLOOK_UNAVAILABLE</span>
+            </div>
+            <div class="issue-body">
+              <div class="symptoms">
+                <h4>Symptoms</h4>
+                <ul>
+                  <li>Error message: "Could not connect to Outlook"</li>
+                  <li>Error code: <code>OUTLOOK_UNAVAILABLE</code></li>
+                </ul>
+              </div>
+
+              <div class="solutions">
+                <h4>Solutions</h4>
+                <div class="solution-item">
+                  <span class="solution-num">1</span>
+                  <div class="solution-content">
+                    <h5>Classic Outlook not running</h5>
+                    <p>Start Outlook manually and wait for it to fully load before retrying.</p>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">2</span>
+                  <div class="solution-content">
+                    <h5>New Outlook is active</h5>
+                    <p>New Outlook (the modern app) does NOT support COM automation. Switch to Classic Outlook: <strong>Settings > General > Use new Outlook > Off</strong></p>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">3</span>
+                  <div class="solution-content">
+                    <h5>Outlook not installed</h5>
+                    <p>Install Microsoft Office with Outlook. Classic Outlook is part of Microsoft 365 / Office suite.</p>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">4</span>
+                  <div class="solution-content">
+                    <h5>COM registration issue</h5>
+                    <p>Try repairing Office installation: <strong>Settings > Apps > Microsoft 365 > Modify > Repair</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- pywin32 Missing -->
+        <section id="pywin32-missing" class="section">
+          <h2>pywin32 Not Installed</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"pywin32 is not installed"</span>
+              <span class="issue-code">DEPENDENCY</span>
+            </div>
+            <div class="issue-body">
+              <div class="solutions">
+                <h4>Solution</h4>
+                <div class="code-block">
+                  <div class="code-header">
+                    <span class="code-lang">bash</span>
+                    <button class="code-copy">Copy</button>
+                  </div>
+                  <div class="code-content"><span class="syn-comment"># Using uv (recommended)</span>
+<span class="syn-cmd">uv add pywin32</span>
+<span class="syn-cmd">uv sync</span>
+
+<span class="syn-comment"># Or with pip</span>
+<span class="syn-cmd">pip install pywin32</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Folder Not Found -->
+        <section id="folder-not-found" class="section">
+          <h2>Folder Not Found</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"Folder not found"</span>
+              <span class="issue-code">FOLDER_NOT_FOUND</span>
+            </div>
+            <div class="issue-body">
+              <div class="solutions">
+                <h4>Solutions</h4>
+                <div class="solution-item">
+                  <span class="solution-num">1</span>
+                  <div class="solution-content">
+                    <h5>Check folder name spelling</h5>
+                    <p>Use the standard folder names (case-insensitive):</p>
+                    <div class="code-block">
+                      <div class="code-header">
+                        <span class="code-lang">bash</span>
+                        <button class="code-copy">Copy</button>
+                      </div>
+                      <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">list</span> <span class="syn-flag">--folder</span> <span class="syn-value">inbox</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">list</span> <span class="syn-flag">--folder</span> <span class="syn-value">sent</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">list</span> <span class="syn-flag">--folder</span> <span class="syn-value">drafts</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">2</span>
+                  <div class="solution-content">
+                    <h5>For custom folders, use by-name or by-path</h5>
+                    <div class="code-block">
+                      <div class="code-header">
+                        <span class="code-lang">bash</span>
+                        <button class="code-copy">Copy</button>
+                      </div>
+                      <div class="code-content"><span class="syn-comment"># Search by name</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">list</span> <span class="syn-flag">--folder</span> <span class="syn-string">"by-name:Projects"</span>
+
+<span class="syn-comment"># Search by path</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">list</span> <span class="syn-flag">--folder</span> <span class="syn-string">"by-path:Inbox/Projects/2025"</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Message Not Found -->
+        <section id="message-not-found" class="section">
+          <h2>Message Not Found</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"Message not found"</span>
+              <span class="issue-code">MESSAGE_NOT_FOUND</span>
+            </div>
+            <div class="issue-body">
+              <div class="symptoms">
+                <h4>Causes</h4>
+                <ul>
+                  <li>Message was deleted or moved</li>
+                  <li>Entry ID has expired (IDs can become stale)</li>
+                  <li>Wrong store ID provided</li>
+                </ul>
+              </div>
+
+              <div class="solutions">
+                <h4>Solutions</h4>
+                <div class="solution-item">
+                  <span class="solution-num">1</span>
+                  <div class="solution-content">
+                    <h5>Re-run list or search to get fresh IDs</h5>
+                    <p>Message IDs can expire. Run <code>list</code> or <code>search</code> again to get current IDs.</p>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">2</span>
+                  <div class="solution-content">
+                    <h5>Ensure both IDs are from the same message</h5>
+                    <p>Both <code>--id</code> and <code>--store</code> must be from the same message result.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Confirmation Required -->
+        <section id="confirmation-required" class="section">
+          <h2>Send Confirmation Required</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"Send confirmation required"</span>
+              <span class="issue-code">CONFIRMATION_REQUIRED</span>
+            </div>
+            <div class="issue-body">
+              <div class="symptoms">
+                <h4>This is intentional</h4>
+                <ul>
+                  <li>You must provide explicit confirmation to send</li>
+                </ul>
+              </div>
+
+              <div class="solutions">
+                <h4>Solution</h4>
+                <div class="code-block">
+                  <div class="code-header">
+                    <span class="code-lang">bash</span>
+                    <button class="code-copy">Copy</button>
+                  </div>
+                  <div class="code-content"><span class="syn-comment"># For sending a draft</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">send</span> \
+  <span class="syn-flag">--draft-id</span> <span class="syn-string">"..."</span> \
+  <span class="syn-flag">--draft-store</span> <span class="syn-string">"..."</span> \
+  <span class="syn-flag">--confirm-send</span> <span class="syn-value">YES</span>
+
+<span class="syn-comment"># For sending new message directly (not recommended)</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">send</span> \
+  <span class="syn-flag">--to</span> <span class="syn-string">"recipient@example.com"</span> \
+  <span class="syn-flag">--subject</span> <span class="syn-string">"Subject"</span> \
+  <span class="syn-flag">--body-text</span> <span class="syn-string">"Body"</span> \
+  <span class="syn-flag">--unsafe-send-new</span> \
+  <span class="syn-flag">--confirm-send</span> <span class="syn-value">YES</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Attachment Errors -->
+        <section id="attachment-errors" class="section">
+          <h2>Attachment Errors</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"Attachment not found"</span>
+              <span class="issue-code">ATTACHMENT_ERROR</span>
+            </div>
+            <div class="issue-body">
+              <div class="solutions">
+                <h4>When creating draft</h4>
+                <div class="solution-item">
+                  <span class="solution-num">&#10003;</span>
+                  <div class="solution-content">
+                    <p>Verify the file path exists, use absolute paths for reliability, and check file permissions.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="solutions">
+                <h4>When saving attachments</h4>
+                <div class="solution-item">
+                  <span class="solution-num">&#10003;</span>
+                  <div class="solution-content">
+                    <p>Ensure the message actually has attachments (<code>has_attachments: true</code>) and verify the destination directory is writable.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Encoding Errors -->
+        <section id="encoding-errors" class="section">
+          <h2>Unicode/Encoding Errors</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"UnicodeDecodeError"</span>
+              <span class="issue-code">ENCODING</span>
+            </div>
+            <div class="issue-body">
+              <div class="symptoms">
+                <h4>Symptoms</h4>
+                <ul>
+                  <li>Garbled characters in output</li>
+                  <li>UnicodeDecodeError exceptions</li>
+                </ul>
+              </div>
+
+              <div class="solutions">
+                <h4>Solutions</h4>
+                <div class="solution-item">
+                  <span class="solution-num">1</span>
+                  <div class="solution-content">
+                    <h5>Ensure terminal supports UTF-8</h5>
+                    <p>Try PowerShell Core instead of cmd.exe</p>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">2</span>
+                  <div class="solution-content">
+                    <h5>Set environment variable</h5>
+                    <div class="code-block">
+                      <div class="code-header">
+                        <span class="code-lang">powershell</span>
+                        <button class="code-copy">Copy</button>
+                      </div>
+                      <div class="code-content">$env:PYTHONIOENCODING = "utf-8"</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Security Prompts -->
+        <section id="security-prompts" class="section">
+          <h2>Outlook Security Prompts</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">"A program is trying to access email..."</span>
+              <span class="issue-code">SECURITY</span>
+            </div>
+            <div class="issue-body">
+              <div class="solutions">
+                <h4>Solutions</h4>
+                <div class="solution-item">
+                  <span class="solution-num">1</span>
+                  <div class="solution-content">
+                    <h5>Click Allow</h5>
+                    <p>One-time approval for the current operation</p>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">2</span>
+                  <div class="solution-content">
+                    <h5>Trust Center settings (Outlook)</h5>
+                    <p><strong>File > Options > Trust Center > Trust Center Settings > Programmatic Access</strong> - Set to "Never warn me"</p>
+                  </div>
+                </div>
+                <div class="solution-item">
+                  <span class="solution-num">3</span>
+                  <div class="solution-content">
+                    <h5>Group Policy (enterprise)</h5>
+                    <p>Contact IT for policy configuration</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slow Performance -->
+        <section id="slow-performance" class="section">
+          <h2>Slow Performance</h2>
+          <div class="issue-card">
+            <div class="issue-header">
+              <span class="issue-title">Commands running slowly</span>
+              <span class="issue-code">PERFORMANCE</span>
+            </div>
+            <div class="issue-body">
+              <div class="solutions">
+                <h4>For large mailboxes</h4>
+                <div class="solution-item">
+                  <span class="solution-num">&#10003;</span>
+                  <div class="solution-content">
+                    <p>Use <code>--count</code> to limit results, add date filters (<code>--since</code>, <code>--until</code>), and search specific folders instead of all.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="solutions">
+                <h4>COM initialization</h4>
+                <div class="solution-item">
+                  <span class="solution-num">&#10003;</span>
+                  <div class="solution-content">
+                    <p>First command may be slow as COM initializes. Subsequent commands are faster.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Environment -->
+        <section id="environment" class="section">
+          <h2>Environment-Specific Issues</h2>
+          <div class="env-grid">
+            <div class="env-card">
+              <h4><span>&#128421;</span> Windows Server / RDP</h4>
+              <p>Ensure Outlook is running in the same session. COM may not work across sessions. Run both Outlook and outlookctl in the same RDP session.</p>
+            </div>
+            <div class="env-card">
+              <h4><span>&#128187;</span> Virtual Machines</h4>
+              <p>COM works in VMs with Outlook installed. Ensure adequate memory for Outlook.</p>
+            </div>
+            <div class="env-card">
+              <h4><span>&#128039;</span> WSL</h4>
+              <p>COM automation requires Windows-native Python. Call outlookctl via PowerShell: <code>powershell.exe -c "uv run python -m outlookctl.cli ..."</code></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Getting Help -->
+        <section id="getting-help" class="section">
+          <h2>Getting Help</h2>
+          <p>If issues persist, gather this information:</p>
+          <div class="help-steps">
+            <div class="help-step">
+              <div class="help-step-num">1</div>
+              <div class="help-step-content">
+                <p>Run <code>uv run python -m outlookctl.cli doctor</code> and note all failures</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="help-step-num">2</div>
+              <div class="help-step-content">
+                <p>Check Outlook is Classic (not New Outlook)</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="help-step-num">3</div>
+              <div class="help-step-content">
+                <p>Try restarting Outlook</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="help-step-num">4</div>
+              <div class="help-step-content">
+                <p>Verify pywin32: <code>python -c "import win32com.client; print('OK')"</code></p>
+              </div>
+            </div>
+          </div>
+
+          <h3>Version Information</h3>
+          <p>Include version info when reporting issues:</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="code-copy">Copy</button>
+            </div>
+            <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">--version</span></div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Copy button functionality
+    document.querySelectorAll('.code-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.closest('.code-block').querySelector('.code-content').textContent;
+        navigator.clipboard.writeText(code.trim());
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+
+    // Active sidebar link on scroll
+    const sections = document.querySelectorAll('.section[id], .quick-start[id]');
+    const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + entry.target.id) {
+              link.classList.add('active');
+            }
+          });
+        }
+      });
+    }, { rootMargin: '-20% 0px -80% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

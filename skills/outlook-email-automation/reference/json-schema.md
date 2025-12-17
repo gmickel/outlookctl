@@ -2,11 +2,39 @@
 
 All `outlookctl` commands output JSON with consistent schemas. This document describes the output formats.
 
+> **Schema Version:** `"1.0"` - All outputs include a `version` field for forward compatibility.
+
+---
+
+## Table of Contents
+
+- [Common Types](#common-types)
+  - [MessageId](#messageid)
+  - [EmailAddress](#emailaddress)
+  - [EventId](#eventid)
+- [Email Command Outputs](#email-command-outputs)
+  - [ListResult](#listresult)
+  - [SearchResult](#searchresult)
+  - [GetResult](#getresult-message-detail)
+  - [DraftResult](#draftresult)
+  - [SendResult](#sendresult)
+  - [AttachmentSaveResult](#attachmentsaveresult)
+- [Calendar Command Outputs](#calendar-command-outputs)
+  - [CalendarListResult](#calendarlistresult)
+  - [EventDetail](#eventdetail)
+  - [EventCreateResult](#eventcreateresult)
+- [System Outputs](#system-outputs)
+  - [DoctorResult](#doctorresult)
+  - [ErrorResult](#errorresult)
+- [Error Codes](#error-codes)
+
+---
+
 ## Common Types
 
 ### MessageId
 
-Stable identifier for referencing messages across commands.
+Stable identifier for referencing messages across commands. **Both fields are required** when referencing a message (e.g., in `get`, `send`, `attachments save`).
 
 ```json
 {
@@ -15,9 +43,9 @@ Stable identifier for referencing messages across commands.
 }
 ```
 
-Both fields are required when referencing a message (e.g., in `get`, `send`, `attachments save`).
-
 ### EmailAddress
+
+Represents a sender or recipient with display name and email address.
 
 ```json
 {
@@ -26,9 +54,22 @@ Both fields are required when referencing a message (e.g., in `get`, `send`, `at
 }
 ```
 
-## Command Outputs
+### EventId
 
-### List Result
+Stable identifier for referencing calendar events. Same structure as MessageId.
+
+```json
+{
+  "entry_id": "00000000...",
+  "store_id": "00000000..."
+}
+```
+
+---
+
+## Email Command Outputs
+
+### ListResult
 
 Output of `outlookctl list`:
 
@@ -62,11 +103,11 @@ Output of `outlookctl list`:
 }
 ```
 
-**Notes:**
-- `body_snippet` is only included when `--include-body-snippet` is used
-- Items are sorted by received time (newest first)
+> **Notes:**
+> - `body_snippet` only included when `--include-body-snippet` is used
+> - Items are sorted by received time (newest first)
 
-### Search Result
+### SearchResult
 
 Output of `outlookctl search`:
 
@@ -79,12 +120,12 @@ Output of `outlookctl search`:
     "unread_only": true
   },
   "items": [
-    // Same structure as list items
+    // Same structure as ListResult items
   ]
 }
 ```
 
-### Get Result (Message Detail)
+### GetResult (Message Detail)
 
 Output of `outlookctl get`:
 
@@ -116,11 +157,11 @@ Output of `outlookctl get`:
 }
 ```
 
-**Notes:**
-- `body` and `body_html` only included with `--include-body`
-- `headers` only included with `--include-headers`
+> **Notes:**
+> - `body` and `body_html` only included with `--include-body`
+> - `headers` only included with `--include-headers`
 
-### Draft Result
+### DraftResult
 
 Output of `outlookctl draft`:
 
@@ -140,7 +181,7 @@ Output of `outlookctl draft`:
 }
 ```
 
-### Send Result
+### SendResult
 
 Output of `outlookctl send`:
 
@@ -155,7 +196,7 @@ Output of `outlookctl send`:
 }
 ```
 
-### Attachment Save Result
+### AttachmentSaveResult
 
 Output of `outlookctl attachments save`:
 
@@ -171,7 +212,99 @@ Output of `outlookctl attachments save`:
 }
 ```
 
-### Doctor Result
+---
+
+## Calendar Command Outputs
+
+### CalendarListResult
+
+Output of `outlookctl calendar list`:
+
+```json
+{
+  "version": "1.0",
+  "calendar": "Calendar",
+  "start_date": "2025-01-15",
+  "end_date": "2025-01-22",
+  "items": [
+    {
+      "id": {
+        "entry_id": "00000000...",
+        "store_id": "00000000..."
+      },
+      "subject": "Team Sync",
+      "start": "2025-01-16T10:00:00",
+      "end": "2025-01-16T11:00:00",
+      "location": "Room A",
+      "organizer": "organizer@example.com",
+      "is_recurring": false,
+      "is_all_day": false,
+      "response_status": "accepted"
+    }
+  ]
+}
+```
+
+### EventDetail
+
+Output of `outlookctl calendar get`:
+
+```json
+{
+  "version": "1.0",
+  "id": {
+    "entry_id": "00000000...",
+    "store_id": "00000000..."
+  },
+  "subject": "Team Sync",
+  "start": "2025-01-16T10:00:00",
+  "end": "2025-01-16T11:00:00",
+  "location": "Room A",
+  "organizer": "organizer@example.com",
+  "is_recurring": false,
+  "is_all_day": false,
+  "response_status": "accepted",
+  "body": "Weekly team sync meeting...",
+  "attendees": [
+    {
+      "name": "Alice",
+      "email": "alice@example.com",
+      "type": "required",
+      "response": "accepted"
+    }
+  ],
+  "categories": ["Meetings"],
+  "reminder_minutes": 15
+}
+```
+
+### EventCreateResult
+
+Output of `outlookctl calendar create`:
+
+```json
+{
+  "version": "1.0",
+  "success": true,
+  "id": {
+    "entry_id": "00000000...",
+    "store_id": "00000000..."
+  },
+  "saved_to": "Calendar",
+  "subject": "Team Sync",
+  "start": "2025-01-16T10:00:00",
+  "attendees": ["alice@example.com", "bob@example.com"],
+  "is_draft": true
+}
+```
+
+> **Note:** `is_draft` is `true` when attendees are present but invitations haven't been sent yet.
+
+---
+
+## System Outputs
+
+### DoctorResult
 
 Output of `outlookctl doctor`:
 
@@ -209,7 +342,7 @@ Output of `outlookctl doctor`:
 }
 ```
 
-### Error Result
+### ErrorResult
 
 All commands return this format on error:
 
@@ -223,16 +356,18 @@ All commands return this format on error:
 }
 ```
 
-**Common error codes:**
-- `OUTLOOK_UNAVAILABLE` - Cannot connect to Outlook COM
-- `FOLDER_NOT_FOUND` - Specified folder doesn't exist
-- `MESSAGE_NOT_FOUND` - Message ID is invalid or expired
-- `CONFIRMATION_REQUIRED` - Send attempted without proper confirmation
-- `VALIDATION_ERROR` - Invalid arguments or missing required fields
-- `DRAFT_ERROR` - Failed to create draft
-- `SEND_ERROR` - Failed to send message
-- `ATTACHMENT_ERROR` - Failed to save attachments
+---
 
-## Schema Versioning
+## Error Codes
 
-All outputs include a `version` field. Current version is `"1.0"`. Future versions will maintain backward compatibility where possible.
+| Code | Description |
+|------|-------------|
+| `OUTLOOK_UNAVAILABLE` | Cannot connect to Outlook COM interface |
+| `FOLDER_NOT_FOUND` | Specified folder doesn't exist |
+| `MESSAGE_NOT_FOUND` | Message ID is invalid or expired |
+| `EVENT_NOT_FOUND` | Calendar event ID is invalid or expired |
+| `CONFIRMATION_REQUIRED` | Send attempted without proper confirmation |
+| `VALIDATION_ERROR` | Invalid arguments or missing required fields |
+| `DRAFT_ERROR` | Failed to create draft |
+| `SEND_ERROR` | Failed to send message or meeting invitation |
+| `ATTACHMENT_ERROR` | Failed to save attachments |

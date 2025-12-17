@@ -1,25 +1,50 @@
-# Security and Data Handling
+# Security & Data Handling
 
 This document describes the security model and data handling practices for `outlookctl`.
 
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Data Minimization](#data-minimization)
+- [Send Safety Gates](#send-safety-gates)
+- [Audit Logging](#audit-logging)
+- [Outlook Security Prompts](#outlook-security-prompts)
+- [Best Practices](#best-practices)
+- [Limitations](#limitations)
+
+---
+
 ## Overview
 
-`outlookctl` operates entirely locally using Outlook's COM automation interface. There are no network calls to external services, no cloud storage, and no OAuth/API tokens required.
+`outlookctl` operates **entirely locally** using Outlook's COM automation interface.
+
+| Feature | Status |
+|---------|--------|
+| Network calls to external services | **None** |
+| Cloud storage | **None** |
+| OAuth/API tokens required | **None** |
+| Microsoft Graph API | **Not required** |
+| Azure app registration | **Not required** |
+
+All operations happen locally through the Outlook COM interface, using your existing Windows authentication.
+
+---
 
 ## Data Minimization
 
 ### Default Behavior
 
 By default, commands return **metadata only**:
+
 - Subject line
 - Sender/recipient email addresses
 - Timestamps
 - Attachment filenames (not content)
 - Read/unread status
 
-**Body content is never retrieved unless explicitly requested** using:
-- `--include-body` (for `get` command)
-- `--include-body-snippet` (for `list` and `search` commands)
+> **Important:** Body content is **never** retrieved unless explicitly requested.
 
 ### Opt-In Body Access
 
@@ -27,42 +52,61 @@ To retrieve message body content, you must explicitly request it:
 
 ```bash
 # Get full body
-uv run outlookctl get --id "..." --store "..." --include-body
+uv run python -m outlookctl.cli get --id "..." --store "..." --include-body
 
-# Get truncated snippet
-uv run outlookctl list --include-body-snippet --body-snippet-chars 200
+# Get truncated snippet (list/search)
+uv run python -m outlookctl.cli list --include-body-snippet --body-snippet-chars 200
 ```
 
 ### Redaction Options
 
-For sensitive environments, consider:
-- Using `--max-body-chars` to limit body size
-- Processing only metadata (default behavior)
-- Implementing additional filtering in your workflow
+For sensitive environments:
+
+| Option | Purpose |
+|--------|---------|
+| `--max-body-chars` | Limit body size returned |
+| Default (no flags) | Metadata only |
+| Custom filtering | Implement in your workflow |
+
+---
 
 ## Send Safety Gates
 
-### Two-Step Workflow
+### Two-Step Workflow (Recommended)
 
-The recommended workflow for sending email:
-
-1. **Create a draft** - `outlookctl draft ...`
-2. **Review** - Show user the subject/recipients/body preview
-3. **Explicit send** - `outlookctl send --draft-id ... --confirm-send YES`
+```
+1. Create draft    →    outlookctl draft ...
+2. Review          →    Show user subject/recipients/body preview
+3. Explicit send   →    outlookctl send --draft-id ... --confirm-send YES
+```
 
 ### Required Confirmation
 
-The `send` command will **refuse to execute** unless one of these conditions is met:
+The `send` command will **refuse to execute** unless:
 
-1. `--confirm-send YES` flag with exact string "YES"
-2. `--confirm-send-file <path>` pointing to a file containing "YES"
+| Method | Example |
+|--------|---------|
+| Flag confirmation | `--confirm-send YES` (exact string) |
+| File confirmation | `--confirm-send-file <path>` containing "YES" |
 
 ```bash
-# This will fail
-uv run outlookctl send --draft-id "..." --draft-store "..."
+# This will FAIL
+uv run python -m outlookctl.cli send --draft-id "..." --draft-store "..."
 
-# This will succeed
-uv run outlookctl send --draft-id "..." --draft-store "..." --confirm-send YES
+# This will SUCCEED
+uv run python -m outlookctl.cli send --draft-id "..." --draft-store "..." --confirm-send YES
+```
+
+### Calendar Safety
+
+Meeting invitations follow the same pattern:
+
+```bash
+# Create meeting (saved as draft with attendees)
+uv run python -m outlookctl.cli calendar create --subject "..." --start "..." --attendees "..."
+
+# Send invitations (requires confirmation)
+uv run python -m outlookctl.cli calendar send --id "..." --store "..." --confirm-send YES
 ```
 
 ### Unsafe Direct Send
@@ -70,8 +114,8 @@ uv run outlookctl send --draft-id "..." --draft-store "..." --confirm-send YES
 Sending a new message without first creating a draft requires **additional confirmation**:
 
 ```bash
-# Requires BOTH flags
-uv run outlookctl send \
+# Requires BOTH flags - intentionally cumbersome
+uv run python -m outlookctl.cli send \
   --to "recipient@example.com" \
   --subject "Subject" \
   --body-text "Body" \
@@ -79,19 +123,22 @@ uv run outlookctl send \
   --confirm-send YES
 ```
 
-This is intentionally cumbersome to discourage bypassing the draft workflow.
+> This is intentionally cumbersome to discourage bypassing the draft workflow.
+
+---
 
 ## Audit Logging
 
 ### Location
 
-Audit logs are stored at:
-- Windows: `%LOCALAPPDATA%\outlookctl\audit.log`
-- Fallback: `~/.outlookctl/audit.log`
+| Platform | Path |
+|----------|------|
+| Windows | `%LOCALAPPDATA%\outlookctl\audit.log` |
+| Fallback | `~/.outlookctl/audit.log` |
 
 ### What's Logged
 
-For send operations, the audit log records:
+For send operations (email and calendar):
 
 ```json
 {
@@ -108,35 +155,43 @@ For send operations, the audit log records:
 }
 ```
 
-**Note:** By default, the log contains **counts and lengths only**, not actual content.
+> **Privacy:** By default, logs contain **counts and lengths only**, not actual content.
 
 ### Logging Body Content
 
 To include body content in the audit log (not recommended for sensitive data):
 
 ```bash
-uv run outlookctl send --draft-id "..." --draft-store "..." --confirm-send YES --log-body
+uv run python -m outlookctl.cli send --draft-id "..." --draft-store "..." --confirm-send YES --log-body
 ```
+
+---
 
 ## Outlook Security Prompts
 
 ### Programmatic Access Warning
 
-Outlook may display a security prompt when accessing certain properties programmatically:
+Outlook may display a security prompt:
 
 > "A program is trying to access email addresses stored in Outlook..."
 
-This is a Windows/Outlook security feature. Options:
-1. Click "Allow" when prompted
-2. Configure Outlook Trust Center settings
-3. Use Group Policy (enterprise environments)
+**Solutions:**
+
+| Option | Description |
+|--------|-------------|
+| Click "Allow" | One-time approval |
+| Trust Center | File > Options > Trust Center > Programmatic Access |
+| Group Policy | Enterprise configuration via IT |
 
 ### COM Security
 
-The tool uses standard COM automation (`Outlook.Application`). This:
+The tool uses standard COM automation (`Outlook.Application`):
+
 - Runs in the user's security context
-- Respects Outlook's security settings
+- Respects Outlook's Trust Center settings
 - May be blocked by some antivirus software
+
+---
 
 ## Best Practices
 
@@ -154,19 +209,14 @@ The tool uses standard COM automation (`Outlook.Application`). This:
 3. Consider disabling `--log-body` entirely
 4. Monitor for unexpected send operations
 
-## No Network Access Required
-
-This tool:
-- Does NOT require Microsoft Graph API
-- Does NOT require Azure app registration
-- Does NOT require OAuth tokens
-- Does NOT make any network calls
-
-All operations happen locally through the Outlook COM interface.
+---
 
 ## Limitations
 
-- Only works with **Classic Outlook** (not New Outlook)
-- Requires Outlook to be running and logged in
-- Subject to corporate Outlook policies
-- COM automation may trigger security prompts
+| Limitation | Details |
+|------------|---------|
+| Classic Outlook only | New Outlook does not support COM |
+| Windows only | COM is a Windows technology |
+| Outlook must be running | And logged into your account |
+| Corporate policies | Subject to Outlook/Exchange policies |
+| Security prompts | COM automation may trigger dialogs |

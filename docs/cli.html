@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLI Reference - outlookctl</title>
+  <meta name="description" content="Complete CLI reference for outlookctl commands and options.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #0a0e14;
+      --bg-secondary: #0d1117;
+      --bg-tertiary: #161b22;
+      --bg-card: #1a1f26;
+      --bg-code: #0d1117;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-cyan: #00d9ff;
+      --accent-blue: #58a6ff;
+      --accent-purple: #a371f7;
+      --accent-green: #3fb950;
+      --accent-orange: #f0883e;
+      --accent-red: #f85149;
+      --accent-yellow: #d29922;
+      --border-subtle: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --glow-cyan: rgba(0, 217, 255, 0.1);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Outfit', system-ui, sans-serif;
+      --sidebar-width: 280px;
+      --header-height: 64px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--header-height) + 24px);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(0, 217, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 217, 255, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: rgba(10, 14, 20, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .logo-text span {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .header-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .header-nav a:hover {
+      color: var(--accent-cyan);
+    }
+
+    .btn-github {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-github:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px var(--glow-cyan);
+    }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      padding-top: var(--header-height);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      width: var(--sidebar-width);
+      height: calc(100vh - var(--header-height));
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-subtle);
+      overflow-y: auto;
+      padding: 24px 0;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent-cyan);
+      background: rgba(0, 217, 255, 0.05);
+      border-left-color: var(--accent-cyan);
+    }
+
+    .sidebar-nav .cmd-icon {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      width: 20px;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 48px 64px;
+      max-width: calc(100% - var(--sidebar-width));
+    }
+
+    .content {
+      max-width: 900px;
+    }
+
+    /* Page header */
+    .page-header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .page-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-header p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Section styling */
+    .section {
+      margin-bottom: 64px;
+      scroll-margin-top: calc(var(--header-height) + 24px);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .section-badge {
+      padding: 4px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Command card */
+    .command-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      margin-bottom: 32px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .command-card:hover {
+      border-color: rgba(0, 217, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .command-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .command-name {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    .command-type {
+      padding: 4px 8px;
+      background: rgba(0, 217, 255, 0.1);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .command-type.calendar {
+      background: rgba(163, 113, 247, 0.1);
+      color: var(--accent-purple);
+    }
+
+    .command-body {
+      padding: 20px;
+    }
+
+    .command-desc {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    /* Code blocks */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .code-lang {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .code-copy {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .code-copy:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .code-copy.copied {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .code-content {
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-content::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .code-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .code-content::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    /* Syntax highlighting */
+    .syn-cmd { color: var(--accent-cyan); }
+    .syn-flag { color: var(--accent-orange); }
+    .syn-value { color: var(--accent-green); }
+    .syn-comment { color: var(--text-muted); font-style: italic; }
+    .syn-string { color: var(--accent-yellow); }
+
+    /* Tables */
+    .options-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+
+    .options-table th {
+      text-align: left;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .options-table td {
+      padding: 12px 16px;
+      border: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+
+    .options-table tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .options-table code {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-orange);
+      background: rgba(240, 136, 62, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .options-table .default {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Labels */
+    .label {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .label-required {
+      background: rgba(248, 81, 73, 0.1);
+      color: var(--accent-red);
+    }
+
+    .label-optional {
+      background: rgba(139, 148, 158, 0.1);
+      color: var(--text-muted);
+    }
+
+    /* Subsection */
+    .subsection {
+      margin-top: 24px;
+    }
+
+    .subsection h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .subsection h4::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--accent-cyan);
+      border-radius: 2px;
+    }
+
+    /* Example output */
+    .output-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+
+    .output-block .key { color: var(--accent-blue); }
+    .output-block .string { color: var(--accent-green); }
+    .output-block .number { color: var(--accent-orange); }
+    .output-block .boolean { color: var(--accent-purple); }
+
+    /* Info boxes */
+    .info-box {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      background: rgba(0, 217, 255, 0.05);
+      border: 1px solid rgba(0, 217, 255, 0.15);
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+
+    .info-box.warning {
+      background: rgba(240, 136, 62, 0.05);
+      border-color: rgba(240, 136, 62, 0.15);
+    }
+
+    .info-box-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .info-box-content {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .info-box-content strong {
+      color: var(--text-primary);
+    }
+
+    /* Folder list */
+    .folder-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .folder-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .folder-item code {
+      color: var(--accent-cyan);
+    }
+
+    .folder-item span {
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 32px 24px;
+        max-width: 100%;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .section:nth-child(1) { animation-delay: 0.1s; }
+    .section:nth-child(2) { animation-delay: 0.15s; }
+    .section:nth-child(3) { animation-delay: 0.2s; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">&#9993;</div>
+        <div class="logo-text">outlookctl <span>/ docs</span></div>
+      </a>
+      <nav class="header-nav">
+        <a href="index.html">Home</a>
+        <a href="cli.html" style="color: var(--accent-cyan);">CLI Reference</a>
+        <a href="https://github.com/gmickel/outlookctl" class="btn-github">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-nav">
+          <li><a href="#overview"><span class="cmd-icon">$</span> Overview</a></li>
+          <li><a href="#doctor"><span class="cmd-icon">$</span> doctor</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Email Commands</div>
+        <ul class="sidebar-nav">
+          <li><a href="#list"><span class="cmd-icon">$</span> list</a></li>
+          <li><a href="#get"><span class="cmd-icon">$</span> get</a></li>
+          <li><a href="#search"><span class="cmd-icon">$</span> search</a></li>
+          <li><a href="#draft"><span class="cmd-icon">$</span> draft</a></li>
+          <li><a href="#send"><span class="cmd-icon">$</span> send</a></li>
+          <li><a href="#attachments"><span class="cmd-icon">$</span> attachments</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Calendar Commands</div>
+        <ul class="sidebar-nav">
+          <li><a href="#calendar-list"><span class="cmd-icon">$</span> calendar list</a></li>
+          <li><a href="#calendar-get"><span class="cmd-icon">$</span> calendar get</a></li>
+          <li><a href="#calendar-create"><span class="cmd-icon">$</span> calendar create</a></li>
+          <li><a href="#calendar-send"><span class="cmd-icon">$</span> calendar send</a></li>
+          <li><a href="#calendar-respond"><span class="cmd-icon">$</span> calendar respond</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <div class="content">
+        <!-- Page header -->
+        <div class="page-header">
+          <h1>CLI Reference</h1>
+          <p>Complete reference for all outlookctl commands and options.</p>
+        </div>
+
+        <!-- Overview -->
+        <section id="overview" class="section">
+          <div class="section-header">
+            <h2>Overview</h2>
+          </div>
+
+          <p class="command-desc">All commands follow this pattern:</p>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="code-copy">Copy</button>
+            </div>
+            <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">&lt;command&gt;</span> <span class="syn-value">[options]</span></div>
+          </div>
+
+          <div class="subsection">
+            <h4>Global Options</h4>
+            <table class="options-table">
+              <thead>
+                <tr>
+                  <th>Option</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>--output</code></td>
+                  <td>Output format: <code>json</code> or <code>text</code> <span class="default">(default: json)</span></td>
+                </tr>
+                <tr>
+                  <td><code>--version</code></td>
+                  <td>Show version number and exit</td>
+                </tr>
+                <tr>
+                  <td><code>--help</code></td>
+                  <td>Show help message and exit</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Doctor -->
+        <section id="doctor" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl doctor</span>
+              <span class="command-type">diagnostic</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Validates environment and prerequisites. Run this first to ensure everything is set up correctly.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">doctor</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Checks Performed</h4>
+                <ul style="list-style: none; margin: 0;">
+                  <li style="padding: 8px 0; color: var(--text-secondary);">&#10003; Windows OS detection</li>
+                  <li style="padding: 8px 0; color: var(--text-secondary);">&#10003; pywin32 installation</li>
+                  <li style="padding: 8px 0; color: var(--text-secondary);">&#10003; Outlook COM availability</li>
+                  <li style="padding: 8px 0; color: var(--text-secondary);">&#10003; Outlook executable location</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- List -->
+        <section id="list" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl list</span>
+              <span class="command-type">email</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">List messages from a folder. Returns message summaries including subject, sender, date, and read status.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">list</span> <span class="syn-flag">--count</span> <span class="syn-value">10</span> <span class="syn-flag">--unread-only</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Default</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>--folder</code></td>
+                      <td><span class="default">inbox</span></td>
+                      <td>Folder to list from (see folder specs below)</td>
+                    </tr>
+                    <tr>
+                      <td><code>--count</code></td>
+                      <td><span class="default">10</span></td>
+                      <td>Number of messages to return</td>
+                    </tr>
+                    <tr>
+                      <td><code>--unread-only</code></td>
+                      <td><span class="default">false</span></td>
+                      <td>Only return unread messages</td>
+                    </tr>
+                    <tr>
+                      <td><code>--since</code></td>
+                      <td><span class="default">-</span></td>
+                      <td>ISO date filter (messages after)</td>
+                    </tr>
+                    <tr>
+                      <td><code>--until</code></td>
+                      <td><span class="default">-</span></td>
+                      <td>ISO date filter (messages before)</td>
+                    </tr>
+                    <tr>
+                      <td><code>--include-body-snippet</code></td>
+                      <td><span class="default">false</span></td>
+                      <td>Include body preview</td>
+                    </tr>
+                    <tr>
+                      <td><code>--body-snippet-chars</code></td>
+                      <td><span class="default">200</span></td>
+                      <td>Max characters for snippet</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="subsection">
+                <h4>Folder Specifications</h4>
+                <div class="folder-list">
+                  <div class="folder-item"><code>inbox</code> <span>Default inbox</span></div>
+                  <div class="folder-item"><code>sent</code> <span>Sent items</span></div>
+                  <div class="folder-item"><code>drafts</code> <span>Drafts folder</span></div>
+                  <div class="folder-item"><code>deleted</code> <span>Deleted items</span></div>
+                  <div class="folder-item"><code>outbox</code> <span>Outbox</span></div>
+                  <div class="folder-item"><code>junk</code> <span>Junk/spam</span></div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 12px;">
+                  Custom folders: <code>by-name:FolderName</code> or <code>by-path:Inbox/Subfolder</code>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Get -->
+        <section id="get" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl get</span>
+              <span class="command-type">email</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Get a single message by ID. Returns full message details including body content when requested.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">get</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--include-body</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Required</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>--id</code></td>
+                      <td><span class="label label-required">Required</span></td>
+                      <td>Message entry ID</td>
+                    </tr>
+                    <tr>
+                      <td><code>--store</code></td>
+                      <td><span class="label label-required">Required</span></td>
+                      <td>Message store ID</td>
+                    </tr>
+                    <tr>
+                      <td><code>--include-body</code></td>
+                      <td><span class="label label-optional">Optional</span></td>
+                      <td>Include full message body</td>
+                    </tr>
+                    <tr>
+                      <td><code>--include-headers</code></td>
+                      <td><span class="label label-optional">Optional</span></td>
+                      <td>Include message headers</td>
+                    </tr>
+                    <tr>
+                      <td><code>--max-body-chars</code></td>
+                      <td><span class="label label-optional">Optional</span></td>
+                      <td>Limit body length</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Search -->
+        <section id="search" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl search</span>
+              <span class="command-type">email</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Search messages with various filters. Combines multiple criteria with AND logic.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">search</span> \
+  <span class="syn-flag">--from</span> <span class="syn-string">"boss@company.com"</span> \
+  <span class="syn-flag">--since</span> <span class="syn-value">2025-01-01</span> \
+  <span class="syn-flag">--unread-only</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Default</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--folder</code></td><td><span class="default">inbox</span></td><td>Folder to search</td></tr>
+                    <tr><td><code>--query</code></td><td><span class="default">-</span></td><td>Free text search (subject/body)</td></tr>
+                    <tr><td><code>--from</code></td><td><span class="default">-</span></td><td>Filter by sender</td></tr>
+                    <tr><td><code>--subject-contains</code></td><td><span class="default">-</span></td><td>Filter by subject text</td></tr>
+                    <tr><td><code>--unread-only</code></td><td><span class="default">false</span></td><td>Only unread messages</td></tr>
+                    <tr><td><code>--since</code></td><td><span class="default">-</span></td><td>ISO date filter (after)</td></tr>
+                    <tr><td><code>--until</code></td><td><span class="default">-</span></td><td>ISO date filter (before)</td></tr>
+                    <tr><td><code>--count</code></td><td><span class="default">50</span></td><td>Maximum results</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Draft -->
+        <section id="draft" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl draft</span>
+              <span class="command-type">email</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Create a draft message. The draft is saved to the Drafts folder and can be reviewed before sending.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">draft</span> \
+  <span class="syn-flag">--to</span> <span class="syn-string">"recipient@example.com"</span> \
+  <span class="syn-flag">--subject</span> <span class="syn-string">"Meeting Follow-up"</span> \
+  <span class="syn-flag">--body-text</span> <span class="syn-string">"Thank you for the meeting."</span> \
+  <span class="syn-flag">--attach</span> <span class="syn-string">"./report.pdf"</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--to</code></td><td>To recipients (comma-separated)</td></tr>
+                    <tr><td><code>--cc</code></td><td>CC recipients (comma-separated)</td></tr>
+                    <tr><td><code>--bcc</code></td><td>BCC recipients (comma-separated)</td></tr>
+                    <tr><td><code>--subject</code></td><td>Email subject</td></tr>
+                    <tr><td><code>--body-text</code></td><td>Plain text body</td></tr>
+                    <tr><td><code>--body-html</code></td><td>HTML body (mutually exclusive with --body-text)</td></tr>
+                    <tr><td><code>--attach</code></td><td>File path to attach (repeatable)</td></tr>
+                    <tr><td><code>--reply-to-id</code></td><td>Entry ID of message to reply to</td></tr>
+                    <tr><td><code>--reply-to-store</code></td><td>Store ID of message to reply to</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Send -->
+        <section id="send" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl send</span>
+              <span class="command-type">email</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Send a draft or new message. <strong>Requires explicit confirmation.</strong></p>
+
+              <div class="info-box warning">
+                <span class="info-box-icon">&#9888;</span>
+                <div class="info-box-content">
+                  <strong>Safety:</strong> Sending requires <code>--confirm-send YES</code>. The recommended workflow is to create a draft first, review it, then send.
+                </div>
+              </div>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-comment"># Send existing draft (recommended)</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">send</span> \
+  <span class="syn-flag">--draft-id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--draft-store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--confirm-send</span> <span class="syn-value">YES</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Safety Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--confirm-send</code></td><td>Must be exactly "YES" to proceed</td></tr>
+                    <tr><td><code>--confirm-send-file</code></td><td>Path to file containing "YES"</td></tr>
+                    <tr><td><code>--unsafe-send-new</code></td><td>Required flag for sending new message directly</td></tr>
+                    <tr><td><code>--log-body</code></td><td>Include body in audit log</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Attachments -->
+        <section id="attachments" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl attachments save</span>
+              <span class="command-type">email</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Save attachments from a message to disk. Creates the destination directory if needed.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">attachments save</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--dest</span> <span class="syn-string">"./downloads"</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Required</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Message entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Message store ID</td></tr>
+                    <tr><td><code>--dest</code></td><td><span class="label label-required">Required</span></td><td>Destination directory</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar List -->
+        <section id="calendar-list" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar list</span>
+              <span class="command-type calendar">calendar</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">List calendar events within a date range. Defaults to the next 7 days from today.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar list</span> \
+  <span class="syn-flag">--start</span> <span class="syn-string">"2025-01-20"</span> \
+  <span class="syn-flag">--days</span> <span class="syn-value">14</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Default</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--start</code></td><td><span class="default">today</span></td><td>Start date (YYYY-MM-DD or YYYY-MM-DD HH:MM)</td></tr>
+                    <tr><td><code>--end</code></td><td><span class="default">-</span></td><td>End date (overrides --days)</td></tr>
+                    <tr><td><code>--days</code></td><td><span class="default">7</span></td><td>Number of days from start</td></tr>
+                    <tr><td><code>--calendar</code></td><td><span class="default">-</span></td><td>Email address for shared calendar</td></tr>
+                    <tr><td><code>--count</code></td><td><span class="default">100</span></td><td>Maximum events to return</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Get -->
+        <section id="calendar-get" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar get</span>
+              <span class="command-type calendar">calendar</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Get detailed information about a calendar event including attendees, recurrence, and body.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar get</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--include-body</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Required</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Event entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Event store ID</td></tr>
+                    <tr><td><code>--include-body</code></td><td><span class="label label-optional">Optional</span></td><td>Include event description</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Create -->
+        <section id="calendar-create" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar create</span>
+              <span class="command-type calendar">calendar</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Create a calendar event or meeting. Meetings with attendees are saved as drafts - invitations are not sent automatically.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar create</span> \
+  <span class="syn-flag">--subject</span> <span class="syn-string">"Team Sync"</span> \
+  <span class="syn-flag">--start</span> <span class="syn-string">"2025-01-20 10:00"</span> \
+  <span class="syn-flag">--duration</span> <span class="syn-value">60</span> \
+  <span class="syn-flag">--location</span> <span class="syn-string">"Room A"</span> \
+  <span class="syn-flag">--attendees</span> <span class="syn-string">"alice@example.com,bob@example.com"</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Default</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--subject</code></td><td><span class="label label-required">Required</span></td><td>Event title</td></tr>
+                    <tr><td><code>--start</code></td><td><span class="label label-required">Required</span></td><td>Start time (YYYY-MM-DD HH:MM)</td></tr>
+                    <tr><td><code>--duration</code></td><td><span class="default">60</span></td><td>Duration in minutes</td></tr>
+                    <tr><td><code>--end</code></td><td><span class="default">-</span></td><td>End time (overrides duration)</td></tr>
+                    <tr><td><code>--location</code></td><td><span class="default">-</span></td><td>Event location</td></tr>
+                    <tr><td><code>--body</code></td><td><span class="default">-</span></td><td>Event description</td></tr>
+                    <tr><td><code>--attendees</code></td><td><span class="default">-</span></td><td>Required attendees (comma-separated)</td></tr>
+                    <tr><td><code>--optional-attendees</code></td><td><span class="default">-</span></td><td>Optional attendees (comma-separated)</td></tr>
+                    <tr><td><code>--all-day</code></td><td><span class="default">false</span></td><td>Create as all-day event</td></tr>
+                    <tr><td><code>--reminder</code></td><td><span class="default">15</span></td><td>Reminder minutes before</td></tr>
+                    <tr><td><code>--busy-status</code></td><td><span class="default">busy</span></td><td>free, tentative, busy, out_of_office, working_elsewhere</td></tr>
+                    <tr><td><code>--teams-url</code></td><td><span class="default">-</span></td><td>Teams URL to embed in body</td></tr>
+                    <tr><td><code>--recurrence</code></td><td><span class="default">-</span></td><td>Recurrence pattern (see below)</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="subsection">
+                <h4>Recurrence Patterns</h4>
+                <div class="code-block">
+                  <div class="code-header">
+                    <span class="code-lang">examples</span>
+                  </div>
+                  <div class="code-content"><span class="syn-comment"># Weekly on Monday and Wednesday until end of year</span>
+<span class="syn-flag">--recurrence</span> <span class="syn-string">"weekly:monday,wednesday:until:2025-12-31"</span>
+
+<span class="syn-comment"># Daily for 10 occurrences</span>
+<span class="syn-flag">--recurrence</span> <span class="syn-string">"daily:count:10"</span>
+
+<span class="syn-comment"># Monthly on the 15th</span>
+<span class="syn-flag">--recurrence</span> <span class="syn-string">"monthly:day:15:until:2025-06-01"</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Send -->
+        <section id="calendar-send" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar send</span>
+              <span class="command-type calendar">calendar</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Send meeting invitations for an existing event. <strong>Requires explicit confirmation.</strong></p>
+
+              <div class="info-box warning">
+                <span class="info-box-icon">&#9888;</span>
+                <div class="info-box-content">
+                  <strong>Safety:</strong> Sending invitations requires <code>--confirm-send YES</code>. Review the meeting details before sending.
+                </div>
+              </div>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar send</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--confirm-send</span> <span class="syn-value">YES</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Required</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Event entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Event store ID</td></tr>
+                    <tr><td><code>--confirm-send</code></td><td><span class="label label-required">Required</span></td><td>Must be exactly "YES"</td></tr>
+                    <tr><td><code>--confirm-send-file</code></td><td><span class="label label-optional">Optional</span></td><td>Path to file containing "YES"</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Respond -->
+        <section id="calendar-respond" class="section">
+          <div class="command-card">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar respond</span>
+              <span class="command-type calendar">calendar</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Respond to a meeting invitation. Sends your response to the organizer by default.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar respond</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--response</span> <span class="syn-value">accept</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Required</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Event entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Event store ID</td></tr>
+                    <tr><td><code>--response</code></td><td><span class="label label-required">Required</span></td><td>accept, decline, or tentative</td></tr>
+                    <tr><td><code>--no-response</code></td><td><span class="label label-optional">Optional</span></td><td>Don't send response to organizer</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Copy button functionality
+    document.querySelectorAll('.code-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.closest('.code-block').querySelector('.code-content').textContent;
+        navigator.clipboard.writeText(code.trim().replace(/\n/g, ' \\\n'));
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+
+    // Active sidebar link on scroll
+    const sections = document.querySelectorAll('.section[id]');
+    const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + entry.target.id) {
+              link.classList.add('active');
+            }
+          });
+        }
+      });
+    }, { rootMargin: '-20% 0px -80% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>

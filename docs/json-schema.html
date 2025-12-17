@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Schema Reference - outlookctl</title>
+  <meta name="description" content="Complete JSON schema reference for outlookctl command outputs.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-primary: #0a0e14;
+      --bg-secondary: #0d1117;
+      --bg-tertiary: #161b22;
+      --bg-card: #1a1f26;
+      --bg-code: #0d1117;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-cyan: #00d9ff;
+      --accent-blue: #58a6ff;
+      --accent-purple: #a371f7;
+      --accent-green: #3fb950;
+      --accent-orange: #f0883e;
+      --accent-red: #f85149;
+      --accent-yellow: #d29922;
+      --border-subtle: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --glow-cyan: rgba(0, 217, 255, 0.1);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Outfit', system-ui, sans-serif;
+      --sidebar-width: 260px;
+      --header-height: 64px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--header-height) + 24px);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(0, 217, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 217, 255, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: rgba(10, 14, 20, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .logo-text span {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .header-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .header-nav a:hover {
+      color: var(--accent-cyan);
+    }
+
+    .header-nav a.active {
+      color: var(--accent-cyan);
+    }
+
+    .btn-github {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-github:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 20px var(--glow-cyan);
+    }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      padding-top: var(--header-height);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      width: var(--sidebar-width);
+      height: calc(100vh - var(--header-height));
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-subtle);
+      overflow-y: auto;
+      padding: 24px 0;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      padding: 0 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent-cyan);
+      background: rgba(0, 217, 255, 0.05);
+      border-left-color: var(--accent-cyan);
+    }
+
+    .sidebar-nav .icon {
+      font-size: 0.9rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 48px 64px;
+      max-width: calc(100% - var(--sidebar-width));
+    }
+
+    .content {
+      max-width: 900px;
+    }
+
+    /* Page header */
+    .page-header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .page-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-header p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Section styling */
+    .section {
+      margin-bottom: 64px;
+      scroll-margin-top: calc(var(--header-height) + 24px);
+    }
+
+    .section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section h2::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(180deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 2px;
+    }
+
+    .section h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 32px 0 16px;
+      color: var(--text-secondary);
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    /* Schema card */
+    .schema-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .schema-card:hover {
+      border-color: rgba(0, 217, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .schema-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .schema-name {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-green);
+    }
+
+    .schema-type {
+      padding: 4px 8px;
+      background: rgba(63, 185, 80, 0.1);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-green);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .schema-body {
+      padding: 20px;
+    }
+
+    .schema-desc {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    /* Code blocks */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .code-lang {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .code-copy {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .code-copy:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .code-copy.copied {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .code-content {
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-content::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .code-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .code-content::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 3px;
+    }
+
+    /* JSON syntax highlighting */
+    .json-key { color: var(--accent-blue); }
+    .json-string { color: var(--accent-green); }
+    .json-number { color: var(--accent-orange); }
+    .json-boolean { color: var(--accent-purple); }
+    .json-null { color: var(--text-muted); }
+    .json-comment { color: var(--text-muted); font-style: italic; }
+
+    /* Notes */
+    .notes {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(88, 166, 255, 0.05);
+      border: 1px solid rgba(88, 166, 255, 0.15);
+      border-radius: 8px;
+    }
+
+    .notes h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+    }
+
+    .notes ul {
+      list-style: none;
+      margin: 0;
+    }
+
+    .notes li {
+      padding: 4px 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .notes li::before {
+      content: "\2022";
+      color: var(--accent-blue);
+      position: absolute;
+      left: 0;
+    }
+
+    /* Error codes table */
+    .error-codes {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+
+    .error-codes th {
+      text-align: left;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .error-codes td {
+      padding: 12px 16px;
+      border: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+
+    .error-codes tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .error-codes code {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-red);
+      background: rgba(248, 81, 73, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Version badge */
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+
+    .version-badge span {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .version-badge code {
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 32px 24px;
+        max-width: 100%;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">&#9993;</div>
+        <div class="logo-text">outlookctl <span>/ docs</span></div>
+      </a>
+      <nav class="header-nav">
+        <a href="index.html">Home</a>
+        <a href="cli.html">CLI Reference</a>
+        <a href="json-schema.html" class="active">JSON Schema</a>
+        <a href="security.html">Security</a>
+        <a href="troubleshooting.html">Troubleshooting</a>
+        <a href="https://github.com/gmickel/outlookctl" class="btn-github">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Common Types</div>
+        <ul class="sidebar-nav">
+          <li><a href="#message-id"><span class="icon">{}</span> MessageId</a></li>
+          <li><a href="#email-address"><span class="icon">{}</span> EmailAddress</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Command Outputs</div>
+        <ul class="sidebar-nav">
+          <li><a href="#list-result"><span class="icon">{}</span> ListResult</a></li>
+          <li><a href="#search-result"><span class="icon">{}</span> SearchResult</a></li>
+          <li><a href="#get-result"><span class="icon">{}</span> GetResult</a></li>
+          <li><a href="#draft-result"><span class="icon">{}</span> DraftResult</a></li>
+          <li><a href="#send-result"><span class="icon">{}</span> SendResult</a></li>
+          <li><a href="#attachment-result"><span class="icon">{}</span> AttachmentResult</a></li>
+          <li><a href="#doctor-result"><span class="icon">{}</span> DoctorResult</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Error Handling</div>
+        <ul class="sidebar-nav">
+          <li><a href="#error-result"><span class="icon">{}</span> ErrorResult</a></li>
+          <li><a href="#error-codes"><span class="icon">#</span> Error Codes</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <div class="content">
+        <!-- Page header -->
+        <div class="page-header">
+          <h1>JSON Schema Reference</h1>
+          <p>All outlookctl commands output JSON with consistent schemas. This document describes the output formats.</p>
+        </div>
+
+        <!-- Version -->
+        <div class="version-badge">
+          <span>Schema Version:</span>
+          <code>"1.0"</code>
+        </div>
+
+        <!-- MessageId -->
+        <section id="message-id" class="section">
+          <h2>MessageId</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">MessageId</span>
+              <span class="schema-type">Object</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Stable identifier for referencing messages across commands. Both fields are required when referencing a message.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"entry_id"</span>: <span class="json-string">"00000000..."</span>,
+  <span class="json-key">"store_id"</span>: <span class="json-string">"00000000..."</span>
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- EmailAddress -->
+        <section id="email-address" class="section">
+          <h2>EmailAddress</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">EmailAddress</span>
+              <span class="schema-type">Object</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Represents a sender or recipient with display name and email address.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"name"</span>: <span class="json-string">"John Doe"</span>,
+  <span class="json-key">"email"</span>: <span class="json-string">"john.doe@example.com"</span>
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- List Result -->
+        <section id="list-result" class="section">
+          <h2>ListResult</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">ListResult</span>
+              <span class="schema-type">Response</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Output of <code>outlookctl list</code> command. Returns message summaries from a folder.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"folder"</span>: {
+    <span class="json-key">"name"</span>: <span class="json-string">"Inbox"</span>,
+    <span class="json-key">"path"</span>: <span class="json-null">null</span>,
+    <span class="json-key">"store_id"</span>: <span class="json-null">null</span>
+  },
+  <span class="json-key">"items"</span>: [
+    {
+      <span class="json-key">"id"</span>: {
+        <span class="json-key">"entry_id"</span>: <span class="json-string">"00000000..."</span>,
+        <span class="json-key">"store_id"</span>: <span class="json-string">"00000000..."</span>
+      },
+      <span class="json-key">"received_at"</span>: <span class="json-string">"2025-01-15T09:30:00"</span>,
+      <span class="json-key">"subject"</span>: <span class="json-string">"Meeting Tomorrow"</span>,
+      <span class="json-key">"from"</span>: {
+        <span class="json-key">"name"</span>: <span class="json-string">"Jane Smith"</span>,
+        <span class="json-key">"email"</span>: <span class="json-string">"jane@example.com"</span>
+      },
+      <span class="json-key">"to"</span>: [<span class="json-string">"you@example.com"</span>],
+      <span class="json-key">"cc"</span>: [],
+      <span class="json-key">"unread"</span>: <span class="json-boolean">true</span>,
+      <span class="json-key">"has_attachments"</span>: <span class="json-boolean">false</span>,
+      <span class="json-key">"body_snippet"</span>: <span class="json-string">"Hi, just wanted to confirm..."</span>
+    }
+  ]
+}</div>
+              </div>
+              <div class="notes">
+                <h4>Notes</h4>
+                <ul>
+                  <li><code>body_snippet</code> is only included when <code>--include-body-snippet</code> is used</li>
+                  <li>Items are sorted by received time (newest first)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Search Result -->
+        <section id="search-result" class="section">
+          <h2>SearchResult</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">SearchResult</span>
+              <span class="schema-type">Response</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Output of <code>outlookctl search</code> command. Includes the query parameters used.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"query"</span>: {
+    <span class="json-key">"from"</span>: <span class="json-string">"boss@company.com"</span>,
+    <span class="json-key">"since"</span>: <span class="json-string">"2025-01-01T00:00:00"</span>,
+    <span class="json-key">"unread_only"</span>: <span class="json-boolean">true</span>
+  },
+  <span class="json-key">"items"</span>: [
+    <span class="json-comment">// Same structure as list items</span>
+  ]
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Get Result -->
+        <section id="get-result" class="section">
+          <h2>GetResult (Message Detail)</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">GetResult</span>
+              <span class="schema-type">Response</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Output of <code>outlookctl get</code> command. Returns full message details.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"id"</span>: {
+    <span class="json-key">"entry_id"</span>: <span class="json-string">"00000000..."</span>,
+    <span class="json-key">"store_id"</span>: <span class="json-string">"00000000..."</span>
+  },
+  <span class="json-key">"received_at"</span>: <span class="json-string">"2025-01-15T09:30:00"</span>,
+  <span class="json-key">"subject"</span>: <span class="json-string">"Meeting Tomorrow"</span>,
+  <span class="json-key">"from"</span>: {
+    <span class="json-key">"name"</span>: <span class="json-string">"Jane Smith"</span>,
+    <span class="json-key">"email"</span>: <span class="json-string">"jane@example.com"</span>
+  },
+  <span class="json-key">"to"</span>: [<span class="json-string">"you@example.com"</span>],
+  <span class="json-key">"cc"</span>: [<span class="json-string">"team@example.com"</span>],
+  <span class="json-key">"bcc"</span>: [],
+  <span class="json-key">"unread"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"has_attachments"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"attachments"</span>: [<span class="json-string">"document.pdf"</span>, <span class="json-string">"image.png"</span>],
+  <span class="json-key">"body"</span>: <span class="json-string">"Full message body text..."</span>,
+  <span class="json-key">"body_html"</span>: <span class="json-string">"&lt;html&gt;...&lt;/html&gt;"</span>,
+  <span class="json-key">"headers"</span>: {
+    <span class="json-key">"Message-ID"</span>: <span class="json-string">"&lt;abc123@mail.example.com&gt;"</span>,
+    <span class="json-key">"Date"</span>: <span class="json-string">"Wed, 15 Jan 2025 09:30:00 +0000"</span>
+  }
+}</div>
+              </div>
+              <div class="notes">
+                <h4>Notes</h4>
+                <ul>
+                  <li><code>body</code> and <code>body_html</code> only included with <code>--include-body</code></li>
+                  <li><code>headers</code> only included with <code>--include-headers</code></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Draft Result -->
+        <section id="draft-result" class="section">
+          <h2>DraftResult</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">DraftResult</span>
+              <span class="schema-type">Response</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Output of <code>outlookctl draft</code> command. Returns the created draft's ID for later reference.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"id"</span>: {
+    <span class="json-key">"entry_id"</span>: <span class="json-string">"00000000..."</span>,
+    <span class="json-key">"store_id"</span>: <span class="json-string">"00000000..."</span>
+  },
+  <span class="json-key">"saved_to"</span>: <span class="json-string">"Drafts"</span>,
+  <span class="json-key">"subject"</span>: <span class="json-string">"Re: Meeting"</span>,
+  <span class="json-key">"to"</span>: [<span class="json-string">"recipient@example.com"</span>],
+  <span class="json-key">"cc"</span>: [],
+  <span class="json-key">"attachments"</span>: [<span class="json-string">"./report.pdf"</span>]
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Send Result -->
+        <section id="send-result" class="section">
+          <h2>SendResult</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">SendResult</span>
+              <span class="schema-type">Response</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Output of <code>outlookctl send</code> command. Confirms the message was sent.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Draft sent successfully"</span>,
+  <span class="json-key">"sent_at"</span>: <span class="json-string">"2025-01-15T10:00:00"</span>,
+  <span class="json-key">"to"</span>: [<span class="json-string">"recipient@example.com"</span>],
+  <span class="json-key">"subject"</span>: <span class="json-string">"Re: Meeting"</span>
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Attachment Result -->
+        <section id="attachment-result" class="section">
+          <h2>AttachmentSaveResult</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">AttachmentSaveResult</span>
+              <span class="schema-type">Response</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Output of <code>outlookctl attachments save</code> command.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"saved_files"</span>: [
+    <span class="json-string">"C:\\Users\\user\\downloads\\document.pdf"</span>,
+    <span class="json-string">"C:\\Users\\user\\downloads\\image.png"</span>
+  ],
+  <span class="json-key">"errors"</span>: []
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Doctor Result -->
+        <section id="doctor-result" class="section">
+          <h2>DoctorResult</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">DoctorResult</span>
+              <span class="schema-type">Response</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">Output of <code>outlookctl doctor</code> command. Reports environment check results.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"all_passed"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"checks"</span>: [
+    {
+      <span class="json-key">"name"</span>: <span class="json-string">"windows_os"</span>,
+      <span class="json-key">"passed"</span>: <span class="json-boolean">true</span>,
+      <span class="json-key">"message"</span>: <span class="json-string">"Windows OS detected"</span>,
+      <span class="json-key">"remediation"</span>: <span class="json-null">null</span>
+    },
+    {
+      <span class="json-key">"name"</span>: <span class="json-string">"pywin32"</span>,
+      <span class="json-key">"passed"</span>: <span class="json-boolean">true</span>,
+      <span class="json-key">"message"</span>: <span class="json-string">"pywin32 is installed and importable"</span>,
+      <span class="json-key">"remediation"</span>: <span class="json-null">null</span>
+    },
+    {
+      <span class="json-key">"name"</span>: <span class="json-string">"outlook_com"</span>,
+      <span class="json-key">"passed"</span>: <span class="json-boolean">true</span>,
+      <span class="json-key">"message"</span>: <span class="json-string">"Outlook COM automation is available"</span>,
+      <span class="json-key">"remediation"</span>: <span class="json-null">null</span>
+    },
+    {
+      <span class="json-key">"name"</span>: <span class="json-string">"outlook_exe"</span>,
+      <span class="json-key">"passed"</span>: <span class="json-boolean">true</span>,
+      <span class="json-key">"message"</span>: <span class="json-string">"Outlook executable found: C:\\...\\OUTLOOK.EXE"</span>,
+      <span class="json-key">"remediation"</span>: <span class="json-null">null</span>
+    }
+  ],
+  <span class="json-key">"outlook_path"</span>: <span class="json-string">"C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE"</span>
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Error Result -->
+        <section id="error-result" class="section">
+          <h2>ErrorResult</h2>
+          <div class="schema-card">
+            <div class="schema-header">
+              <span class="schema-name">ErrorResult</span>
+              <span class="schema-type">Error</span>
+            </div>
+            <div class="schema-body">
+              <p class="schema-desc">All commands return this format on error. Includes remediation hints when available.</p>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">json</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content">{
+  <span class="json-key">"version"</span>: <span class="json-string">"1.0"</span>,
+  <span class="json-key">"success"</span>: <span class="json-boolean">false</span>,
+  <span class="json-key">"error"</span>: <span class="json-string">"Description of what went wrong"</span>,
+  <span class="json-key">"error_code"</span>: <span class="json-string">"OUTLOOK_UNAVAILABLE"</span>,
+  <span class="json-key">"remediation"</span>: <span class="json-string">"Start Classic Outlook and try again."</span>
+}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Error Codes -->
+        <section id="error-codes" class="section">
+          <h2>Error Codes</h2>
+          <p>Common error codes and their meanings:</p>
+          <table class="error-codes">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>OUTLOOK_UNAVAILABLE</code></td>
+                <td>Cannot connect to Outlook COM interface</td>
+              </tr>
+              <tr>
+                <td><code>FOLDER_NOT_FOUND</code></td>
+                <td>Specified folder doesn't exist</td>
+              </tr>
+              <tr>
+                <td><code>MESSAGE_NOT_FOUND</code></td>
+                <td>Message ID is invalid or expired</td>
+              </tr>
+              <tr>
+                <td><code>CONFIRMATION_REQUIRED</code></td>
+                <td>Send attempted without proper confirmation</td>
+              </tr>
+              <tr>
+                <td><code>VALIDATION_ERROR</code></td>
+                <td>Invalid arguments or missing required fields</td>
+              </tr>
+              <tr>
+                <td><code>DRAFT_ERROR</code></td>
+                <td>Failed to create draft</td>
+              </tr>
+              <tr>
+                <td><code>SEND_ERROR</code></td>
+                <td>Failed to send message</td>
+              </tr>
+              <tr>
+                <td><code>ATTACHMENT_ERROR</code></td>
+                <td>Failed to save attachments</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Copy button functionality
+    document.querySelectorAll('.code-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.closest('.code-block').querySelector('.code-content').textContent;
+        navigator.clipboard.writeText(code.trim());
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+
+    // Active sidebar link on scroll
+    const sections = document.querySelectorAll('.section[id]');
+    const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + entry.target.id) {
+              link.classList.add('active');
+            }
+          });
+        }
+      });
+    }, { rootMargin: '-20% 0px -80% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>
