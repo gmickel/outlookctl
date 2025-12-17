@@ -2,125 +2,113 @@
 
 Common issues and solutions for `outlookctl`.
 
----
-
-## Table of Contents
-
-- [Quick Diagnostics](#quick-diagnostics)
-- [Common Issues](#common-issues)
-  - [Outlook COM Unavailable](#outlook-com-unavailable)
-  - [pywin32 Not Installed](#pywin32-not-installed)
-  - [Folder Not Found](#folder-not-found)
-  - [Message/Event Not Found](#messageevent-not-found)
-  - [Send Confirmation Required](#send-confirmation-required)
-  - [Attachment Errors](#attachment-errors)
-  - [Unicode/Encoding Errors](#unicodeencoding-errors)
-  - [Outlook Security Prompts](#outlook-security-prompts)
-  - [Slow Performance](#slow-performance)
-- [Environment-Specific Issues](#environment-specific-issues)
-- [Getting Help](#getting-help)
-
----
-
 ## Quick Diagnostics
 
 Always start with the doctor command:
 
 ```bash
-uv run python -m outlookctl.cli doctor
+uv run outlookctl doctor
 ```
 
 This checks all prerequisites and provides specific remediation advice.
 
----
-
 ## Common Issues
 
-### Outlook COM Unavailable
+### "Outlook COM automation unavailable"
 
-**Error:** `OUTLOOK_UNAVAILABLE` - "Could not connect to Outlook"
+**Symptoms:**
+- Error code: `OUTLOOK_UNAVAILABLE`
+- Message: "Could not connect to Outlook"
 
-| Cause | Solution |
-|-------|----------|
-| Classic Outlook not running | Start Outlook manually, wait for full load |
-| New Outlook is active | Switch to Classic: Settings > General > Use new Outlook > **Off** |
-| Outlook not installed | Install Microsoft 365 / Office suite with Outlook |
-| COM registration issue | Repair Office: Settings > Apps > Microsoft 365 > Modify > Repair |
+**Causes and Solutions:**
 
----
+1. **Classic Outlook not running**
+   - Start Outlook manually
+   - Wait for it to fully load before retrying
 
-### pywin32 Not Installed
+2. **New Outlook is active**
+   - New Outlook (the modern app) does NOT support COM automation
+   - Switch to Classic Outlook: Settings > General > Use new Outlook > Off
+   - Or start Classic Outlook directly from the Office folder
 
-**Error:** "pywin32 is not installed"
+3. **Outlook not installed**
+   - Install Microsoft Office with Outlook
+   - Classic Outlook is part of Microsoft 365 / Office suite
 
+4. **COM registration issue**
+   - Try repairing Office installation
+   - Run Office repair: Settings > Apps > Microsoft 365 > Modify > Repair
+
+### "pywin32 is not installed"
+
+**Solution:**
 ```bash
-# Using uv (recommended)
 uv add pywin32
 uv sync
+```
 
-# Or with pip
+Or with pip:
+```bash
 pip install pywin32
 ```
 
----
+### "Folder not found"
 
-### Folder Not Found
+**Symptoms:**
+- Error code: `FOLDER_NOT_FOUND`
 
-**Error:** `FOLDER_NOT_FOUND`
+**Solutions:**
 
-**Standard folders** (case-insensitive):
+1. **Check folder name spelling**
+   ```bash
+   # Use the default folders
+   uv run outlookctl list --folder inbox
+   uv run outlookctl list --folder sent
+   uv run outlookctl list --folder drafts
+   ```
+
+2. **For custom folders, use by-name or by-path**
+   ```bash
+   # Search by name
+   uv run outlookctl list --folder "by-name:Projects"
+
+   # Search by path
+   uv run outlookctl list --folder "by-path:Inbox/Projects/2025"
+   ```
+
+3. **Folder names are case-insensitive**
+
+### "Message not found"
+
+**Symptoms:**
+- Error code: `MESSAGE_NOT_FOUND`
+
+**Causes:**
+1. Message was deleted or moved
+2. Entry ID has expired (IDs can become stale)
+3. Wrong store ID
+
+**Solutions:**
+1. Re-run `list` or `search` to get fresh IDs
+2. Ensure both `--id` and `--store` are from the same message
+
+### "Send confirmation required"
+
+**Symptoms:**
+- Error code: `CONFIRMATION_REQUIRED`
+
+**Solution:**
+This is intentional. You must provide explicit confirmation:
 
 ```bash
-uv run python -m outlookctl.cli list --folder inbox
-uv run python -m outlookctl.cli list --folder sent
-uv run python -m outlookctl.cli list --folder drafts
-```
-
-**Custom folders:**
-
-```bash
-# By name
-uv run python -m outlookctl.cli list --folder "by-name:Projects"
-
-# By path
-uv run python -m outlookctl.cli list --folder "by-path:Inbox/Projects/2025"
-```
-
----
-
-### Message/Event Not Found
-
-**Error:** `MESSAGE_NOT_FOUND` or `EVENT_NOT_FOUND`
-
-| Cause | Solution |
-|-------|----------|
-| Item was deleted or moved | Re-run `list` or `search` for fresh IDs |
-| Entry ID expired | IDs can become stale - get new ones |
-| Wrong store ID | Ensure `--id` and `--store` are from same item |
-
----
-
-### Send Confirmation Required
-
-**Error:** `CONFIRMATION_REQUIRED`
-
-This is **intentional**. You must provide explicit confirmation:
-
-```bash
-# Sending a draft (email)
-uv run python -m outlookctl.cli send \
+# For sending a draft
+uv run outlookctl send \
   --draft-id "..." \
   --draft-store "..." \
   --confirm-send YES
 
-# Sending meeting invitations
-uv run python -m outlookctl.cli calendar send \
-  --id "..." \
-  --store "..." \
-  --confirm-send YES
-
-# Direct send (not recommended)
-uv run python -m outlookctl.cli send \
+# For sending new message directly (not recommended)
+uv run outlookctl send \
   --to "recipient@example.com" \
   --subject "Subject" \
   --body-text "Body" \
@@ -128,122 +116,85 @@ uv run python -m outlookctl.cli send \
   --confirm-send YES
 ```
 
----
-
-### Attachment Errors
+### "Attachment not found"
 
 **When creating draft:**
-
 - Verify the file path exists
 - Use absolute paths for reliability
 - Check file permissions
 
 **When saving attachments:**
-
-- Ensure message has attachments (`has_attachments: true`)
+- Ensure the message actually has attachments (`has_attachments: true`)
 - Verify destination directory is writable
-
----
 
 ### Unicode/Encoding Errors
 
-**Symptoms:** Garbled characters, `UnicodeDecodeError`
+**Symptoms:**
+- Garbled characters in output
+- UnicodeDecodeError
 
-| Solution | Command |
-|----------|---------|
-| Use PowerShell Core | Instead of cmd.exe |
-| Set encoding | `$env:PYTHONIOENCODING = "utf-8"` |
-| Check terminal | Ensure UTF-8 support |
-
----
+**Solutions:**
+1. Ensure terminal supports UTF-8
+2. Try PowerShell Core instead of cmd.exe
+3. Set environment: `$env:PYTHONIOENCODING = "utf-8"`
 
 ### Outlook Security Prompts
 
-**Symptom:** Dialog: "A program is trying to access email..."
+**Symptom:**
+Dialog appears: "A program is trying to access email..."
 
-| Solution | Steps |
-|----------|-------|
-| Click "Allow" | One-time approval |
-| Trust Center | File > Options > Trust Center > Programmatic Access > "Never warn" |
-| Group Policy | Contact IT for enterprise configuration |
+**Solutions:**
 
----
+1. **Click Allow** - One-time approval
+2. **Trust Center settings** (Outlook):
+   - File > Options > Trust Center > Trust Center Settings
+   - Programmatic Access > Set to "Never warn me"
+3. **Group Policy** (enterprise):
+   - Contact IT for policy configuration
 
 ### Slow Performance
 
 **Large mailboxes:**
-
-```bash
-# Limit results
-uv run python -m outlookctl.cli list --count 10
-
-# Use date filters
-uv run python -m outlookctl.cli search --since 2025-01-01 --until 2025-01-31
-
-# Search specific folders
-uv run python -m outlookctl.cli list --folder inbox
-```
+- Use `--count` to limit results
+- Use date filters (`--since`, `--until`)
+- Search specific folders instead of all
 
 **COM initialization:**
-
-- First command may be slow (COM initialization)
+- First command may be slow as COM initializes
 - Subsequent commands are faster
-
----
 
 ## Environment-Specific Issues
 
 ### Windows Server / RDP
 
-| Issue | Solution |
-|-------|----------|
-| COM not connecting | Ensure Outlook runs in same session |
-| Cross-session issues | Run both Outlook and outlookctl in same RDP session |
+- Ensure Outlook is running in the same session
+- COM may not work across sessions
+- Consider running Outlook and outlookctl in the same RDP session
 
 ### Virtual Machines
 
-| Consideration | Notes |
-|---------------|-------|
-| COM support | Works in VMs with Outlook installed |
-| Memory | Ensure adequate RAM for Outlook |
+- COM works in VMs with Outlook installed
+- Ensure adequate memory for Outlook
 
 ### WSL (Windows Subsystem for Linux)
 
-COM automation requires Windows-native Python:
-
-```bash
-# Option 1: Call via PowerShell
-powershell.exe -c "uv run python -m outlookctl.cli ..."
-
-# Option 2: Install Python in Windows
-# Use Windows Python directly
-```
-
----
+- COM automation requires Windows-native Python
+- Call outlookctl via PowerShell: `powershell.exe -c "uv run outlookctl ..."`
+- Or install Python + dependencies in Windows
 
 ## Getting Help
 
 If issues persist:
 
-1. **Run diagnostics:**
-   ```bash
-   uv run python -m outlookctl.cli doctor
-   ```
+1. Run `uv run outlookctl doctor` and note all failures
+2. Check Outlook is Classic (not New Outlook)
+3. Try restarting Outlook
+4. Verify pywin32: `python -c "import win32com.client; print('OK')"`
 
-2. **Verify Outlook version:**
-   - Must be Classic Outlook (not New Outlook)
-   - Check: Settings > General > "Use new Outlook" should be **Off**
+## Version Information
 
-3. **Try restarting Outlook**
+```bash
+uv run outlookctl --version
+```
 
-4. **Verify pywin32:**
-   ```bash
-   python -c "import win32com.client; print('OK')"
-   ```
-
-5. **Get version info:**
-   ```bash
-   uv run python -m outlookctl.cli --version
-   ```
-
-Include version info and `doctor` output when reporting issues.
+Include version info when reporting issues.
