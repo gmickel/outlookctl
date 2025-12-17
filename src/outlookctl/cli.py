@@ -5,10 +5,11 @@ This module provides the main entry point and argument parsing for the CLI.
 """
 
 import argparse
+import functools
 import json
 import sys
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Callable
 
 from . import __version__
 from .models import (
@@ -97,6 +98,65 @@ def output_error(error: str, error_code: str = None, remediation: str = None) ->
     sys.exit(1)
 
 
+def handle_outlook_errors(error_code: str) -> Callable:
+    """
+    Decorator to handle common Outlook errors consistently.
+
+    Args:
+        error_code: The error code to use for unhandled exceptions
+
+    Returns:
+        Decorated function
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except OutlookNotAvailableError as e:
+                output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
+            except FolderNotFoundError as e:
+                output_error(str(e), "FOLDER_NOT_FOUND")
+            except MessageNotFoundError as e:
+                output_error(str(e), "MESSAGE_NOT_FOUND")
+            except EventNotFoundError as e:
+                output_error(str(e), "EVENT_NOT_FOUND")
+            except CalendarNotFoundError as e:
+                output_error(str(e), "CALENDAR_NOT_FOUND")
+            except SendConfirmationError as e:
+                output_error(str(e), "CONFIRMATION_REQUIRED", "Use --confirm-send YES")
+            except ValueError as e:
+                output_error(str(e), "VALIDATION_ERROR")
+            except OutlookError as e:
+                output_error(str(e), error_code)
+            except Exception as e:
+                output_error(str(e), error_code)
+        return wrapper
+    return decorator
+
+
+def parse_recipient_args(
+    to: Optional[str] = None,
+    cc: Optional[str] = None,
+    bcc: Optional[str] = None,
+) -> tuple[list[str], list[str], list[str]]:
+    """
+    Parse recipient arguments from comma-separated strings.
+
+    Args:
+        to: Comma-separated To addresses
+        cc: Comma-separated CC addresses
+        bcc: Comma-separated BCC addresses
+
+    Returns:
+        Tuple of (to_list, cc_list, bcc_list)
+    """
+    to_list = [addr.strip() for addr in to.split(",")] if to else []
+    cc_list = [addr.strip() for addr in cc.split(",")] if cc else []
+    bcc_list = [addr.strip() for addr in bcc.split(",")] if bcc else []
+    return to_list, cc_list, bcc_list
+
+
 def parse_date(date_str: str) -> Optional[datetime]:
     """Parse an ISO date string."""
     if not date_str:
@@ -118,135 +178,112 @@ def cmd_doctor(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+@handle_outlook_errors("LIST_ERROR")
 def cmd_list(args: argparse.Namespace) -> None:
     """List messages from a folder."""
-    try:
-        outlook = get_outlook_app()
-        folder, folder_info = resolve_folder(outlook, args.folder)
+    outlook = get_outlook_app()
+    folder, folder_info = resolve_folder(outlook, args.folder)
 
-        since = parse_date(args.since) if args.since else None
-        until = parse_date(args.until) if args.until else None
+    since = parse_date(args.since) if args.since else None
+    until = parse_date(args.until) if args.until else None
 
-        messages = list(list_messages(
-            outlook,
-            folder_spec=args.folder,
-            count=args.count,
-            unread_only=args.unread_only,
-            since=since,
-            until=until,
-            include_body_snippet=args.include_body_snippet,
-            body_snippet_chars=args.body_snippet_chars,
-        ))
+    messages = list(list_messages(
+        outlook,
+        folder_spec=args.folder,
+        count=args.count,
+        unread_only=args.unread_only,
+        since=since,
+        until=until,
+        include_body_snippet=args.include_body_snippet,
+        body_snippet_chars=args.body_snippet_chars,
+    ))
 
-        result = ListResult(
-            folder=folder_info,
-            items=messages,
-        )
-        output_json(result.to_dict(), args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except FolderNotFoundError as e:
-        output_error(str(e), "FOLDER_NOT_FOUND")
-    except Exception as e:
-        output_error(str(e), "LIST_ERROR")
+    result = ListResult(
+        folder=folder_info,
+        items=messages,
+    )
+    output_json(result.to_dict(), args.output)
 
 
+@handle_outlook_errors("GET_ERROR")
 def cmd_get(args: argparse.Namespace) -> None:
     """Get a single message by ID."""
-    try:
-        outlook = get_outlook_app()
-        mail = get_message_by_id(outlook, args.id, args.store)
+    outlook = get_outlook_app()
+    mail = get_message_by_id(outlook, args.id, args.store)
 
-        detail = extract_message_detail(
-            mail,
-            include_body=args.include_body,
-            max_body_chars=args.max_body_chars,
-            include_headers=args.include_headers,
-        )
+    detail = extract_message_detail(
+        mail,
+        include_body=args.include_body,
+        max_body_chars=args.max_body_chars,
+        include_headers=args.include_headers,
+    )
 
-        output_json({"version": "1.0", **detail.to_dict()}, args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except MessageNotFoundError as e:
-        output_error(str(e), "MESSAGE_NOT_FOUND")
-    except Exception as e:
-        output_error(str(e), "GET_ERROR")
+    output_json({"version": "1.0", **detail.to_dict()}, args.output)
 
 
+@handle_outlook_errors("SEARCH_ERROR")
 def cmd_search(args: argparse.Namespace) -> None:
     """Search messages."""
-    try:
-        outlook = get_outlook_app()
+    outlook = get_outlook_app()
 
-        since = parse_date(args.since) if args.since else None
-        until = parse_date(args.until) if args.until else None
+    since = parse_date(args.since) if args.since else None
+    until = parse_date(args.until) if args.until else None
 
-        # Parse has_attachments flag
-        has_attachments = None
-        if args.has_attachments:
-            has_attachments = True
-        elif args.no_attachments:
-            has_attachments = False
+    # Parse has_attachments flag
+    has_attachments = None
+    if args.has_attachments:
+        has_attachments = True
+    elif args.no_attachments:
+        has_attachments = False
 
-        messages = list(search_messages(
-            outlook,
-            folder_spec=args.folder,
-            query=args.query,
-            from_filter=getattr(args, "from", None),
-            to_filter=args.to,
-            cc_filter=args.cc,
-            subject_contains=args.subject_contains,
-            unread_only=args.unread_only,
-            has_attachments=has_attachments,
-            since=since,
-            until=until,
-            count=args.count,
-            include_body_snippet=args.include_body_snippet,
-            body_snippet_chars=args.body_snippet_chars,
-        ))
+    messages = list(search_messages(
+        outlook,
+        folder_spec=args.folder,
+        query=args.query,
+        from_filter=getattr(args, "from", None),
+        to_filter=args.to,
+        cc_filter=args.cc,
+        subject_contains=args.subject_contains,
+        unread_only=args.unread_only,
+        has_attachments=has_attachments,
+        since=since,
+        until=until,
+        count=args.count,
+        include_body_snippet=args.include_body_snippet,
+        body_snippet_chars=args.body_snippet_chars,
+    ))
 
-        query_info = {}
-        if args.query:
-            query_info["text"] = args.query
-        if getattr(args, "from", None):
-            query_info["from"] = getattr(args, "from")
-        if args.to:
-            query_info["to"] = args.to
-        if args.cc:
-            query_info["cc"] = args.cc
-        if args.subject_contains:
-            query_info["subject_contains"] = args.subject_contains
-        if args.unread_only:
-            query_info["unread_only"] = True
-        if has_attachments is not None:
-            query_info["has_attachments"] = has_attachments
-        if since:
-            query_info["since"] = since.isoformat()
-        if until:
-            query_info["until"] = until.isoformat()
+    query_info = {}
+    if args.query:
+        query_info["text"] = args.query
+    if getattr(args, "from", None):
+        query_info["from"] = getattr(args, "from")
+    if args.to:
+        query_info["to"] = args.to
+    if args.cc:
+        query_info["cc"] = args.cc
+    if args.subject_contains:
+        query_info["subject_contains"] = args.subject_contains
+    if args.unread_only:
+        query_info["unread_only"] = True
+    if has_attachments is not None:
+        query_info["has_attachments"] = has_attachments
+    if since:
+        query_info["since"] = since.isoformat()
+    if until:
+        query_info["until"] = until.isoformat()
 
-        result = SearchResult(
-            query=query_info,
-            items=messages,
-        )
-        output_json(result.to_dict(), args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except FolderNotFoundError as e:
-        output_error(str(e), "FOLDER_NOT_FOUND")
-    except Exception as e:
-        output_error(str(e), "SEARCH_ERROR")
+    result = SearchResult(
+        query=query_info,
+        items=messages,
+    )
+    output_json(result.to_dict(), args.output)
 
 
 def cmd_draft(args: argparse.Namespace) -> None:
     """Create a draft message."""
     try:
-        to_list = [addr.strip() for addr in args.to.split(",")] if args.to else []
-        cc_list = [addr.strip() for addr in args.cc.split(",")] if args.cc else []
-        bcc_list = [addr.strip() for addr in args.bcc.split(",")] if args.bcc else []
+        to_list, cc_list, bcc_list = parse_recipient_args(args.to, args.cc, args.bcc)
 
         # For reply-all, we don't require recipients (they come from original)
         if not args.reply_all:
@@ -358,10 +395,7 @@ def cmd_send(args: argparse.Namespace) -> None:
                 args.confirm_send_file,
             )
 
-            to_list = [addr.strip() for addr in args.to.split(",")]
-            cc_list = [addr.strip() for addr in args.cc.split(",")] if args.cc else []
-            bcc_list = [addr.strip() for addr in args.bcc.split(",")] if args.bcc else []
-
+            to_list, cc_list, bcc_list = parse_recipient_args(args.to, args.cc, args.bcc)
             check_recipients(to_list, cc_list, bcc_list)
 
             send_new_message(
@@ -452,151 +486,108 @@ def cmd_attachments_save(args: argparse.Namespace) -> None:
         output_error(str(e), "ATTACHMENT_ERROR")
 
 
+@handle_outlook_errors("MOVE_ERROR")
 def cmd_move(args: argparse.Namespace) -> None:
     """Move a message to another folder."""
-    try:
-        outlook = get_outlook_app()
+    outlook = get_outlook_app()
 
-        # Get message info before moving
-        mail = get_message_by_id(outlook, args.id, args.store)
-        subject = str(mail.Subject or "")
+    # Get message info before moving
+    mail = get_message_by_id(outlook, args.id, args.store)
+    subject = str(mail.Subject or "")
 
-        new_entry_id, new_store_id, folder_name = move_message(
-            outlook,
-            entry_id=args.id,
-            store_id=args.store,
-            dest_folder_spec=args.dest,
-        )
+    new_entry_id, new_store_id, folder_name = move_message(
+        outlook,
+        entry_id=args.id,
+        store_id=args.store,
+        dest_folder_spec=args.dest,
+    )
 
-        result = MoveResult(
-            success=True,
-            message=f"Message moved to {folder_name}",
-            id=MessageId(entry_id=new_entry_id, store_id=new_store_id),
-            moved_to=folder_name,
-            subject=subject,
-        )
-        output_json(result.to_dict(), args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except MessageNotFoundError as e:
-        output_error(str(e), "MESSAGE_NOT_FOUND")
-    except FolderNotFoundError as e:
-        output_error(str(e), "FOLDER_NOT_FOUND")
-    except OutlookError as e:
-        output_error(str(e), "MOVE_ERROR")
-    except Exception as e:
-        output_error(str(e), "MOVE_ERROR")
+    result = MoveResult(
+        success=True,
+        message=f"Message moved to {folder_name}",
+        id=MessageId(entry_id=new_entry_id, store_id=new_store_id),
+        moved_to=folder_name,
+        subject=subject,
+    )
+    output_json(result.to_dict(), args.output)
 
 
+@handle_outlook_errors("DELETE_ERROR")
 def cmd_delete(args: argparse.Namespace) -> None:
     """Delete a message."""
-    try:
-        outlook = get_outlook_app()
+    outlook = get_outlook_app()
 
-        subject = delete_message(
-            outlook,
-            entry_id=args.id,
-            store_id=args.store,
-            permanent=args.permanent,
-        )
+    subject = delete_message(
+        outlook,
+        entry_id=args.id,
+        store_id=args.store,
+        permanent=args.permanent,
+    )
 
-        result = DeleteResult(
-            success=True,
-            message="Message deleted" if not args.permanent else "Message permanently deleted",
-            subject=subject,
-            permanent=args.permanent,
-        )
-        output_json(result.to_dict(), args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except MessageNotFoundError as e:
-        output_error(str(e), "MESSAGE_NOT_FOUND")
-    except OutlookError as e:
-        output_error(str(e), "DELETE_ERROR")
-    except Exception as e:
-        output_error(str(e), "DELETE_ERROR")
+    result = DeleteResult(
+        success=True,
+        message="Message deleted" if not args.permanent else "Message permanently deleted",
+        subject=subject,
+        permanent=args.permanent,
+    )
+    output_json(result.to_dict(), args.output)
 
 
+@handle_outlook_errors("MARK_ERROR")
 def cmd_mark_read(args: argparse.Namespace) -> None:
     """Mark a message as read or unread."""
-    try:
-        outlook = get_outlook_app()
+    outlook = get_outlook_app()
 
-        # Determine if marking as read or unread
-        mark_as_read = not args.unread
+    # Determine if marking as read or unread
+    mark_as_read = not args.unread
 
-        mark_message_read(
-            outlook,
-            entry_id=args.id,
-            store_id=args.store,
-            read=mark_as_read,
-        )
+    mark_message_read(
+        outlook,
+        entry_id=args.id,
+        store_id=args.store,
+        read=mark_as_read,
+    )
 
-        status = "read" if mark_as_read else "unread"
-        result = MarkReadResult(
-            success=True,
-            message=f"Message marked as {status}",
-            count=1,
-            marked_as=status,
-        )
-        output_json(result.to_dict(), args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except MessageNotFoundError as e:
-        output_error(str(e), "MESSAGE_NOT_FOUND")
-    except OutlookError as e:
-        output_error(str(e), "MARK_ERROR")
-    except Exception as e:
-        output_error(str(e), "MARK_ERROR")
+    status = "read" if mark_as_read else "unread"
+    result = MarkReadResult(
+        success=True,
+        message=f"Message marked as {status}",
+        count=1,
+        marked_as=status,
+    )
+    output_json(result.to_dict(), args.output)
 
 
+@handle_outlook_errors("FORWARD_ERROR")
 def cmd_forward(args: argparse.Namespace) -> None:
     """Create a forward draft for a message."""
-    try:
-        to_list = [addr.strip() for addr in args.to.split(",")] if args.to else []
-        cc_list = [addr.strip() for addr in args.cc.split(",")] if args.cc else []
-        bcc_list = [addr.strip() for addr in args.bcc.split(",")] if args.bcc else []
+    to_list, cc_list, bcc_list = parse_recipient_args(args.to, args.cc, args.bcc)
+    check_recipients(to_list, cc_list, bcc_list)
 
-        check_recipients(to_list, cc_list, bcc_list)
+    outlook = get_outlook_app()
 
-        outlook = get_outlook_app()
+    # Get original message info
+    original = get_message_by_id(outlook, args.id, args.store)
+    original_subject = str(original.Subject or "")
 
-        # Get original message info
-        original = get_message_by_id(outlook, args.id, args.store)
-        original_subject = str(original.Subject or "")
+    entry_id, store_id = create_forward(
+        outlook,
+        entry_id=args.id,
+        store_id=args.store,
+        to=to_list,
+        cc=cc_list,
+        bcc=bcc_list,
+        additional_text=args.message,
+    )
 
-        entry_id, store_id = create_forward(
-            outlook,
-            entry_id=args.id,
-            store_id=args.store,
-            to=to_list,
-            cc=cc_list,
-            bcc=bcc_list,
-            additional_text=args.message,
-        )
-
-        result = ForwardResult(
-            success=True,
-            id=MessageId(entry_id=entry_id, store_id=store_id),
-            saved_to="Drafts",
-            original_subject=original_subject,
-            to=to_list,
-        )
-        output_json(result.to_dict(), args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except MessageNotFoundError as e:
-        output_error(str(e), "MESSAGE_NOT_FOUND")
-    except ValueError as e:
-        output_error(str(e), "VALIDATION_ERROR")
-    except OutlookError as e:
-        output_error(str(e), "FORWARD_ERROR")
-    except Exception as e:
-        output_error(str(e), "FORWARD_ERROR")
+    result = ForwardResult(
+        success=True,
+        id=MessageId(entry_id=entry_id, store_id=store_id),
+        saved_to="Drafts",
+        original_subject=original_subject,
+        to=to_list,
+    )
+    output_json(result.to_dict(), args.output)
 
 
 # =============================================================================
@@ -624,32 +615,26 @@ def parse_datetime(dt_str: str) -> datetime:
     )
 
 
+@handle_outlook_errors("CALENDARS_LIST_ERROR")
 def cmd_calendar_calendars(args: argparse.Namespace) -> None:
     """List all available calendars."""
-    try:
-        outlook = get_outlook_app()
+    from outlookctl.outlook_com import list_all_calendars
+    from outlookctl.models import CalendarsResult, CalendarInfo
 
-        from outlookctl.outlook_com import list_all_calendars
-        from outlookctl.models import CalendarsResult, CalendarInfo
+    outlook = get_outlook_app()
+    calendars = list_all_calendars(outlook)
 
-        calendars = list_all_calendars(outlook)
-
-        result = CalendarsResult(
-            calendars=[
-                CalendarInfo(
-                    name=cal["name"],
-                    path=cal["path"],
-                    store=cal["store"],
-                )
-                for cal in calendars
-            ]
-        )
-        output_json(result.to_dict(), args.output)
-
-    except OutlookNotAvailableError as e:
-        output_error(str(e), "OUTLOOK_UNAVAILABLE", "Start Classic Outlook and try again.")
-    except Exception as e:
-        output_error(str(e), "CALENDARS_LIST_ERROR")
+    result = CalendarsResult(
+        calendars=[
+            CalendarInfo(
+                name=cal["name"],
+                path=cal["path"],
+                store=cal["store"],
+            )
+            for cal in calendars
+        ]
+    )
+    output_json(result.to_dict(), args.output)
 
 
 def cmd_calendar_list(args: argparse.Namespace) -> None:

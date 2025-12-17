@@ -39,6 +39,24 @@ OL_FOLDER_OUTBOX = 4
 OL_FOLDER_JUNK = 23
 OL_FOLDER_CALENDAR = 9
 
+# Outlook item class constants (OlObjectClass enumeration)
+OL_ITEM_CLASS_MAIL = 43
+OL_ITEM_CLASS_APPOINTMENT = 26
+
+# Outlook recipient type constants (OlMailRecipientType enumeration)
+OL_RECIPIENT_TO = 1
+OL_RECIPIENT_CC = 2
+OL_RECIPIENT_BCC = 3
+
+# Outlook meeting attendee type constants (OlMeetingRecipientType enumeration)
+OL_MEETING_REQUIRED = 1
+OL_MEETING_OPTIONAL = 2
+OL_MEETING_RESOURCE = 3
+
+# MAPI property tags
+MAPI_PR_SMTP_ADDRESS = "http://schemas.microsoft.com/mapi/proptag/0x39FE001F"
+MAPI_PR_TRANSPORT_MESSAGE_HEADERS = "http://schemas.microsoft.com/mapi/proptag/0x007D001F"
+
 # Map of common folder names to constants
 FOLDER_MAP = {
     "inbox": OL_FOLDER_INBOX,
@@ -368,6 +386,20 @@ def resolve_folder(outlook_app, folder_spec: str):
     )
 
 
+def iter_com_collection(collection):
+    """
+    Safely iterate over COM collections with 1-based indexing.
+
+    Args:
+        collection: COM collection object with Count property
+
+    Yields:
+        Items from the collection
+    """
+    for i in range(1, collection.Count + 1):
+        yield collection.Item(i)
+
+
 def extract_email_address(recipient) -> EmailAddress:
     """Extract email address from a recipient or sender object."""
     try:
@@ -378,10 +410,7 @@ def extract_email_address(recipient) -> EmailAddress:
             email = str(recipient.Address)
         if hasattr(recipient, "PropertyAccessor"):
             try:
-                # PR_SMTP_ADDRESS
-                smtp = recipient.PropertyAccessor.GetProperty(
-                    "http://schemas.microsoft.com/mapi/proptag/0x39FE001F"
-                )
+                smtp = recipient.PropertyAccessor.GetProperty(MAPI_PR_SMTP_ADDRESS)
                 if smtp:
                     email = smtp
             except Exception:
@@ -391,12 +420,37 @@ def extract_email_address(recipient) -> EmailAddress:
         return EmailAddress(name="", email="")
 
 
+def extract_recipients_by_type(recipients) -> dict[str, list[str]]:
+    """
+    Extract recipients grouped by type (to/cc/bcc).
+
+    Args:
+        recipients: Outlook Recipients COM collection
+
+    Returns:
+        Dict with keys 'to', 'cc', 'bcc', each containing list of addresses
+    """
+    result = {"to": [], "cc": [], "bcc": []}
+    try:
+        for recip in iter_com_collection(recipients):
+            addr = extract_email_address(recip)
+            addr_str = addr.email if addr.email else addr.name
+            if recip.Type == OL_RECIPIENT_TO:
+                result["to"].append(addr_str)
+            elif recip.Type == OL_RECIPIENT_CC:
+                result["cc"].append(addr_str)
+            elif recip.Type == OL_RECIPIENT_BCC:
+                result["bcc"].append(addr_str)
+    except Exception:
+        pass
+    return result
+
+
 def extract_recipients(recipients) -> list[str]:
     """Extract list of email addresses from recipients collection."""
     result = []
     try:
-        for i in range(1, recipients.Count + 1):
-            recip = recipients.Item(i)
+        for recip in iter_com_collection(recipients):
             addr = extract_email_address(recip)
             if addr.email:
                 result.append(addr.email)
@@ -447,19 +501,9 @@ def extract_message_summary(
         pass
 
     # Extract recipients
-    to_list = []
-    cc_list = []
-    try:
-        for i in range(1, mail_item.Recipients.Count + 1):
-            recip = mail_item.Recipients.Item(i)
-            addr = extract_email_address(recip)
-            addr_str = addr.email if addr.email else addr.name
-            if recip.Type == 1:  # olTo
-                to_list.append(addr_str)
-            elif recip.Type == 2:  # olCC
-                cc_list.append(addr_str)
-    except Exception:
-        pass
+    recipients = extract_recipients_by_type(mail_item.Recipients)
+    to_list = recipients["to"]
+    cc_list = recipients["cc"]
 
     # Extract body snippet if requested
     body_snippet = None
@@ -517,28 +561,15 @@ def extract_message_detail(
         pass
 
     # Extract recipients by type
-    to_list = []
-    cc_list = []
-    bcc_list = []
-    try:
-        for i in range(1, mail_item.Recipients.Count + 1):
-            recip = mail_item.Recipients.Item(i)
-            addr = extract_email_address(recip)
-            addr_str = addr.email if addr.email else addr.name
-            if recip.Type == 1:  # olTo
-                to_list.append(addr_str)
-            elif recip.Type == 2:  # olCC
-                cc_list.append(addr_str)
-            elif recip.Type == 3:  # olBCC
-                bcc_list.append(addr_str)
-    except Exception:
-        pass
+    recipients = extract_recipients_by_type(mail_item.Recipients)
+    to_list = recipients["to"]
+    cc_list = recipients["cc"]
+    bcc_list = recipients["bcc"]
 
     # Extract attachments
     attachment_names = []
     try:
-        for i in range(1, mail_item.Attachments.Count + 1):
-            att = mail_item.Attachments.Item(i)
+        for att in iter_com_collection(mail_item.Attachments):
             attachment_names.append(str(att.FileName))
     except Exception:
         pass
@@ -570,8 +601,7 @@ def extract_message_detail(
             headers = {}
             # Get transport message headers
             prop_accessor = mail_item.PropertyAccessor
-            header_prop = "http://schemas.microsoft.com/mapi/proptag/0x007D001F"
-            raw_headers = prop_accessor.GetProperty(header_prop)
+            raw_headers = prop_accessor.GetProperty(MAPI_PR_TRANSPORT_MESSAGE_HEADERS)
             if raw_headers:
                 for line in str(raw_headers).split("\n"):
                     if ": " in line:
@@ -661,7 +691,7 @@ def list_messages(
 
         try:
             # Skip non-mail items
-            if item.Class != 43:  # olMail
+            if item.Class != OL_ITEM_CLASS_MAIL:
                 continue
 
             # Filter by unread
@@ -779,7 +809,7 @@ def search_messages(
             break
 
         try:
-            if item.Class != 43:  # olMail
+            if item.Class != OL_ITEM_CLASS_MAIL:
                 continue
 
             # Manual filtering for query (body/subject search)
@@ -794,9 +824,8 @@ def search_messages(
             if to_filter:
                 to_filter_lower = to_filter.lower()
                 found_to = False
-                for i in range(1, item.Recipients.Count + 1):
-                    recip = item.Recipients.Item(i)
-                    if recip.Type == 1:  # olTo
+                for recip in iter_com_collection(item.Recipients):
+                    if recip.Type == OL_RECIPIENT_TO:
                         addr = extract_email_address(recip)
                         if (to_filter_lower in addr.email.lower() or
                             to_filter_lower in addr.name.lower()):
@@ -809,9 +838,8 @@ def search_messages(
             if cc_filter:
                 cc_filter_lower = cc_filter.lower()
                 found_cc = False
-                for i in range(1, item.Recipients.Count + 1):
-                    recip = item.Recipients.Item(i)
-                    if recip.Type == 2:  # olCC
+                for recip in iter_com_collection(item.Recipients):
+                    if recip.Type == OL_RECIPIENT_CC:
                         addr = extract_email_address(recip)
                         if (cc_filter_lower in addr.email.lower() or
                             cc_filter_lower in addr.name.lower()):
@@ -893,11 +921,11 @@ def create_draft(
 
         # Set recipients
         for addr in to:
-            mail.Recipients.Add(addr).Type = 1  # olTo
+            mail.Recipients.Add(addr).Type = OL_RECIPIENT_TO
         for addr in cc:
-            mail.Recipients.Add(addr).Type = 2  # olCC
+            mail.Recipients.Add(addr).Type = OL_RECIPIENT_CC
         for addr in bcc:
-            mail.Recipients.Add(addr).Type = 3  # olBCC
+            mail.Recipients.Add(addr).Type = OL_RECIPIENT_BCC
 
         # Resolve recipients
         mail.Recipients.ResolveAll()
@@ -979,11 +1007,11 @@ def send_new_message(
 
         # Set recipients
         for addr in to:
-            mail.Recipients.Add(addr).Type = 1
+            mail.Recipients.Add(addr).Type = OL_RECIPIENT_TO
         for addr in cc:
-            mail.Recipients.Add(addr).Type = 2
+            mail.Recipients.Add(addr).Type = OL_RECIPIENT_CC
         for addr in bcc:
-            mail.Recipients.Add(addr).Type = 3
+            mail.Recipients.Add(addr).Type = OL_RECIPIENT_BCC
 
         mail.Recipients.ResolveAll()
 
@@ -1028,8 +1056,7 @@ def save_attachments(
     mail = get_message_by_id(outlook_app, entry_id, store_id)
     saved_files = []
 
-    for i in range(1, mail.Attachments.Count + 1):
-        att = mail.Attachments.Item(i)
+    for i, att in enumerate(iter_com_collection(mail.Attachments), start=1):
         filename = str(att.FileName)
 
         # Sanitize filename
@@ -1113,15 +1140,30 @@ def delete_message(
         subject = str(mail.Subject or "")
 
         if permanent:
-            # Permanent delete - bypasses Deleted Items
-            mail.Delete()
-            # Move to deleted items then delete again for permanent
-            # Actually for permanent, we need to delete twice or use special method
-            # The first Delete moves to Deleted Items, then need to find and delete again
-            # For simplicity, we'll just do a single Delete which moves to Deleted Items
-            # and document that --permanent requires message already in Deleted Items
-            pass
+            # Permanent delete - delete twice (first to Deleted Items, then permanently)
+            # Get current folder to check if already in Deleted Items
+            deleted_folder = get_default_folder(outlook_app, OL_FOLDER_DELETED_ITEMS)
+            current_folder_id = mail.Parent.EntryID
+
+            if current_folder_id == deleted_folder.EntryID:
+                # Already in Deleted Items - this delete is permanent
+                mail.Delete()
+            else:
+                # First delete moves to Deleted Items
+                mail.Delete()
+                # Now find and delete from Deleted Items
+                # Search by subject and approximate time (items in Deleted Items)
+                try:
+                    for item in iter_com_collection(deleted_folder.Items):
+                        if (item.Class == OL_ITEM_CLASS_MAIL and
+                            str(item.Subject or "") == subject):
+                            item.Delete()
+                            break
+                except Exception:
+                    # If we can't find it to delete again, soft delete is ok
+                    pass
         else:
+            # Normal delete - moves to Deleted Items
             mail.Delete()
 
         return subject
@@ -1195,11 +1237,11 @@ def create_forward(
 
         # Set recipients
         for addr in to:
-            forward.Recipients.Add(addr).Type = 1  # olTo
+            forward.Recipients.Add(addr).Type = OL_RECIPIENT_TO
         for addr in cc:
-            forward.Recipients.Add(addr).Type = 2  # olCC
+            forward.Recipients.Add(addr).Type = OL_RECIPIENT_CC
         for addr in bcc:
-            forward.Recipients.Add(addr).Type = 3  # olBCC
+            forward.Recipients.Add(addr).Type = OL_RECIPIENT_BCC
 
         forward.Recipients.ResolveAll()
 
@@ -1431,8 +1473,7 @@ def _find_calendar_folders(folder, path_prefix: str = "") -> list[tuple[str, str
 
     # Recurse into subfolders
     try:
-        for i in range(1, folder.Folders.Count + 1):
-            subfolder = folder.Folders.Item(i)
+        for subfolder in iter_com_collection(folder.Folders):
             calendars.extend(_find_calendar_folders(subfolder, current_path))
     except Exception:
         pass
@@ -1451,8 +1492,7 @@ def list_all_calendars(outlook_app) -> list[dict]:
     all_calendars = []
 
     # Iterate through all stores (accounts)
-    for i in range(1, namespace.Stores.Count + 1):
-        store = namespace.Stores.Item(i)
+    for store in iter_com_collection(namespace.Stores):
         store_name = store.DisplayName
 
         try:
@@ -1604,19 +1644,16 @@ def extract_attendees(appt_item) -> list[Attendee]:
     """Extract attendees from an appointment."""
     attendees = []
     try:
-        for i in range(1, appt_item.Recipients.Count + 1):
-            recip = appt_item.Recipients.Item(i)
+        for recip in iter_com_collection(appt_item.Recipients):
             addr = extract_email_address(recip)
 
             # Determine attendee type
-            if recip.Type == 1:
-                attendee_type = "required"
-            elif recip.Type == 2:
-                attendee_type = "optional"
-            elif recip.Type == 3:
-                attendee_type = "resource"
-            else:
-                attendee_type = "required"
+            attendee_type_map = {
+                OL_MEETING_REQUIRED: "required",
+                OL_MEETING_OPTIONAL: "optional",
+                OL_MEETING_RESOURCE: "resource",
+            }
+            attendee_type = attendee_type_map.get(recip.Type, "required")
 
             # Get response status
             response = "none"
@@ -1801,51 +1838,7 @@ def list_events(
         EventSummary objects
     """
     calendar = get_calendar(outlook_app, calendar_email)
-    items = calendar.Items
-
-    # Important: Set IncludeRecurrences BEFORE sorting
-    items.IncludeRecurrences = True
-    items.Sort("[Start]")
-
-    # Build date filter - find events that START within the date range
-    start_str = start_date.strftime("%m/%d/%Y %H:%M %p")
-    end_str = end_date.strftime("%m/%d/%Y %H:%M %p")
-
-    restriction = f"[Start] >= '{start_str}' AND [Start] <= '{end_str}'"
-
-    try:
-        items = items.Restrict(restriction)
-    except Exception:
-        # Fall back to manual filtering if restriction fails
-        pass
-
-    yielded = 0
-    for item in items:
-        if yielded >= count:
-            break
-
-        try:
-            # Check if item is an appointment
-            if item.Class != 26:  # olAppointment
-                continue
-
-            # Manual date filtering as backup - event must start within range
-            # Convert COM datetime to naive Python datetime for comparison
-            item_start = item.Start
-            if hasattr(item_start, 'replace'):
-                # Remove timezone info for comparison (pywintypes.datetime -> naive)
-                item_start_naive = item_start.replace(tzinfo=None)
-            else:
-                item_start_naive = item_start
-
-            if item_start_naive < start_date or item_start_naive > end_date:
-                continue
-
-            yield extract_event_summary(item)
-            yielded += 1
-
-        except Exception:
-            continue
+    yield from list_events_from_folder(calendar, start_date, end_date, count)
 
 
 def list_events_from_folder(
@@ -1889,7 +1882,7 @@ def list_events_from_folder(
             break
 
         try:
-            if item.Class != 26:  # olAppointment
+            if item.Class != OL_ITEM_CLASS_APPOINTMENT:
                 continue
 
             item_start = item.Start
@@ -2002,11 +1995,11 @@ def create_event(
 
             for addr in attendees:
                 recip = appt.Recipients.Add(addr)
-                recip.Type = 1  # olRequired
+                recip.Type = OL_MEETING_REQUIRED
 
             for addr in optional_attendees:
                 recip = appt.Recipients.Add(addr)
-                recip.Type = 2  # olOptional
+                recip.Type = OL_MEETING_OPTIONAL
 
             appt.Recipients.ResolveAll()
 
