@@ -27,6 +27,8 @@ from .models import (
     MarkReadResult,
     ForwardResult,
     # Calendar models
+    CalendarInfo,
+    CalendarsResult,
     CalendarListResult,
     EventCreateResult,
     EventSendResult,

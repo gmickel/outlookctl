@@ -36,7 +36,7 @@ class TestParseRecipientArgs:
         assert bcc_list == []
 
     def test_whitespace_trimming(self):
-        to_list, cc_list, bcc_list = parse_recipient_args(
+        to_list, _cc_list, _bcc_list = parse_recipient_args(
             to="  alice@example.com  ,  bob@example.com  ",
             cc=None,
             bcc=None,
@@ -44,7 +44,7 @@ class TestParseRecipientArgs:
         assert to_list == ["alice@example.com", "bob@example.com"]
 
     def test_single_recipient_no_comma(self):
-        to_list, cc_list, bcc_list = parse_recipient_args(
+        to_list, _cc_list, _bcc_list = parse_recipient_args(
             to="single@example.com",
             cc=None,
             bcc=None,
@@ -53,7 +53,7 @@ class TestParseRecipientArgs:
 
     def test_trailing_comma(self):
         """Trailing comma should not produce empty string in list."""
-        to_list, cc_list, bcc_list = parse_recipient_args(
+        to_list, _cc_list, _bcc_list = parse_recipient_args(
             to="alice@example.com,",
             cc=None,
             bcc=None,
