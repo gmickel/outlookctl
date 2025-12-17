@@ -699,6 +699,7 @@
       <div class="sidebar-section">
         <div class="sidebar-title">Calendar Commands</div>
         <ul class="sidebar-nav">
+          <li><a href="#calendar-calendars"><span class="cmd-icon">$</span> calendar calendars <span class="new-badge">new</span></a></li>
           <li><a href="#calendar-list"><span class="cmd-icon">$</span> calendar list</a></li>
           <li><a href="#calendar-get"><span class="cmd-icon">$</span> calendar get</a></li>
           <li><a href="#calendar-create"><span class="cmd-icon">$</span> calendar create</a></li>
@@ -1232,6 +1233,47 @@
           </div>
         </section>
 
+        <!-- Calendar Calendars -->
+        <section id="calendar-calendars" class="section">
+          <div class="command-card new-command">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar calendars</span>
+              <span class="command-type calendar">calendar</span>
+              <span class="new-badge">new</span>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">List all available calendars across all accounts, including subscribed ICS calendars, shared calendars, and internet calendars.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar calendars</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Output Fields</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr><th>Field</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>name</code></td><td>Calendar display name</td></tr>
+                    <tr><td><code>path</code></td><td>Full path in folder hierarchy</td></tr>
+                    <tr><td><code>store</code></td><td>Account/store containing the calendar</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="subsection">
+                <h4>Usage</h4>
+                <p>Use this to discover calendar names, then access them with <code>--calendar "Name"</code> in other commands.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Calendar List -->
         <section id="calendar-list" class="section">
           <div class="command-card">
@@ -1252,6 +1294,16 @@
   <span class="syn-flag">--days</span> <span class="syn-value">14</span></div>
               </div>
 
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-comment"># Access a specific calendar by name</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar list</span> \
+  <span class="syn-flag">--calendar</span> <span class="syn-string">"Family"</span> <span class="syn-flag">--days</span> <span class="syn-value">7</span></div>
+              </div>
+
               <div class="subsection">
                 <h4>Options</h4>
                 <table class="options-table">
@@ -1262,7 +1314,7 @@
                     <tr><td><code>--start</code></td><td><span class="default">today</span></td><td>Start date</td></tr>
                     <tr><td><code>--end</code></td><td><span class="default">-</span></td><td>End date (overrides --days)</td></tr>
                     <tr><td><code>--days</code></td><td><span class="default">7</span></td><td>Number of days from start</td></tr>
-                    <tr><td><code>--calendar</code></td><td><span class="default">-</span></td><td>Email for shared calendar</td></tr>
+                    <tr><td><code>--calendar</code></td><td><span class="default">-</span></td><td>Calendar name or email for shared calendar</td></tr>
                     <tr><td><code>--count</code></td><td><span class="default">100</span></td><td>Maximum events</td></tr>
                   </tbody>
                 </table>
