@@ -244,6 +244,17 @@
       width: 20px;
     }
 
+    .sidebar-nav .new-badge {
+      font-size: 0.6rem;
+      padding: 2px 5px;
+      background: var(--accent-green);
+      color: #000;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: auto;
+    }
+
     /* Main content */
     .main {
       flex: 1;
@@ -323,6 +334,10 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
 
+    .command-card.new-feature {
+      border-color: rgba(63, 185, 80, 0.3);
+    }
+
     .command-header {
       display: flex;
       align-items: center;
@@ -339,6 +354,11 @@
       color: var(--accent-cyan);
     }
 
+    .command-badges {
+      display: flex;
+      gap: 8px;
+    }
+
     .command-type {
       padding: 4px 8px;
       background: rgba(0, 217, 255, 0.1);
@@ -353,6 +373,11 @@
     .command-type.calendar {
       background: rgba(163, 113, 247, 0.1);
       color: var(--accent-purple);
+    }
+
+    .command-type.new {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
     }
 
     .command-body {
@@ -507,6 +532,11 @@
       color: var(--text-muted);
     }
 
+    .label-new {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
+    }
+
     /* Subsection */
     .subsection {
       margin-top: 24px;
@@ -529,24 +559,6 @@
       background: var(--accent-cyan);
       border-radius: 2px;
     }
-
-    /* Example output */
-    .output-block {
-      background: var(--bg-code);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 16px;
-      margin: 16px 0;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      line-height: 1.5;
-      overflow-x: auto;
-    }
-
-    .output-block .key { color: var(--accent-blue); }
-    .output-block .string { color: var(--accent-green); }
-    .output-block .number { color: var(--accent-orange); }
-    .output-block .boolean { color: var(--accent-purple); }
 
     /* Info boxes */
     .info-box {
@@ -676,6 +688,10 @@
           <li><a href="#search"><span class="cmd-icon">$</span> search</a></li>
           <li><a href="#draft"><span class="cmd-icon">$</span> draft</a></li>
           <li><a href="#send"><span class="cmd-icon">$</span> send</a></li>
+          <li><a href="#move"><span class="cmd-icon">$</span> move <span class="new-badge">new</span></a></li>
+          <li><a href="#delete"><span class="cmd-icon">$</span> delete <span class="new-badge">new</span></a></li>
+          <li><a href="#mark-read"><span class="cmd-icon">$</span> mark-read <span class="new-badge">new</span></a></li>
+          <li><a href="#forward"><span class="cmd-icon">$</span> forward <span class="new-badge">new</span></a></li>
           <li><a href="#attachments"><span class="cmd-icon">$</span> attachments</a></li>
         </ul>
       </div>
@@ -688,6 +704,8 @@
           <li><a href="#calendar-create"><span class="cmd-icon">$</span> calendar create</a></li>
           <li><a href="#calendar-send"><span class="cmd-icon">$</span> calendar send</a></li>
           <li><a href="#calendar-respond"><span class="cmd-icon">$</span> calendar respond</a></li>
+          <li><a href="#calendar-update"><span class="cmd-icon">$</span> calendar update <span class="new-badge">new</span></a></li>
+          <li><a href="#calendar-delete"><span class="cmd-icon">$</span> calendar delete <span class="new-badge">new</span></a></li>
         </ul>
       </div>
     </aside>
@@ -797,48 +815,16 @@
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Default</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Default</th><th>Description</th></tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td><code>--folder</code></td>
-                      <td><span class="default">inbox</span></td>
-                      <td>Folder to list from (see folder specs below)</td>
-                    </tr>
-                    <tr>
-                      <td><code>--count</code></td>
-                      <td><span class="default">10</span></td>
-                      <td>Number of messages to return</td>
-                    </tr>
-                    <tr>
-                      <td><code>--unread-only</code></td>
-                      <td><span class="default">false</span></td>
-                      <td>Only return unread messages</td>
-                    </tr>
-                    <tr>
-                      <td><code>--since</code></td>
-                      <td><span class="default">-</span></td>
-                      <td>ISO date filter (messages after)</td>
-                    </tr>
-                    <tr>
-                      <td><code>--until</code></td>
-                      <td><span class="default">-</span></td>
-                      <td>ISO date filter (messages before)</td>
-                    </tr>
-                    <tr>
-                      <td><code>--include-body-snippet</code></td>
-                      <td><span class="default">false</span></td>
-                      <td>Include body preview</td>
-                    </tr>
-                    <tr>
-                      <td><code>--body-snippet-chars</code></td>
-                      <td><span class="default">200</span></td>
-                      <td>Max characters for snippet</td>
-                    </tr>
+                    <tr><td><code>--folder</code></td><td><span class="default">inbox</span></td><td>Folder to list from</td></tr>
+                    <tr><td><code>--count</code></td><td><span class="default">10</span></td><td>Number of messages to return</td></tr>
+                    <tr><td><code>--unread-only</code></td><td><span class="default">false</span></td><td>Only return unread messages</td></tr>
+                    <tr><td><code>--since</code></td><td><span class="default">-</span></td><td>ISO date filter (messages after)</td></tr>
+                    <tr><td><code>--until</code></td><td><span class="default">-</span></td><td>ISO date filter (messages before)</td></tr>
+                    <tr><td><code>--include-body-snippet</code></td><td><span class="default">false</span></td><td>Include body preview</td></tr>
+                    <tr><td><code>--body-snippet-chars</code></td><td><span class="default">200</span></td><td>Max characters for snippet</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -886,38 +872,14 @@
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Required</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td><code>--id</code></td>
-                      <td><span class="label label-required">Required</span></td>
-                      <td>Message entry ID</td>
-                    </tr>
-                    <tr>
-                      <td><code>--store</code></td>
-                      <td><span class="label label-required">Required</span></td>
-                      <td>Message store ID</td>
-                    </tr>
-                    <tr>
-                      <td><code>--include-body</code></td>
-                      <td><span class="label label-optional">Optional</span></td>
-                      <td>Include full message body</td>
-                    </tr>
-                    <tr>
-                      <td><code>--include-headers</code></td>
-                      <td><span class="label label-optional">Optional</span></td>
-                      <td>Include message headers</td>
-                    </tr>
-                    <tr>
-                      <td><code>--max-body-chars</code></td>
-                      <td><span class="label label-optional">Optional</span></td>
-                      <td>Limit body length</td>
-                    </tr>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Message entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Message store ID</td></tr>
+                    <tr><td><code>--include-body</code></td><td><span class="label label-optional">Optional</span></td><td>Include full message body</td></tr>
+                    <tr><td><code>--include-headers</code></td><td><span class="label label-optional">Optional</span></td><td>Include message headers</td></tr>
+                    <tr><td><code>--max-body-chars</code></td><td><span class="label label-optional">Optional</span></td><td>Limit body length</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -942,26 +904,26 @@
                 </div>
                 <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">search</span> \
   <span class="syn-flag">--from</span> <span class="syn-string">"boss@company.com"</span> \
-  <span class="syn-flag">--since</span> <span class="syn-value">2025-01-01</span> \
-  <span class="syn-flag">--unread-only</span></div>
+  <span class="syn-flag">--has-attachments</span> \
+  <span class="syn-flag">--since</span> <span class="syn-value">2025-01-01</span></div>
               </div>
 
               <div class="subsection">
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Default</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Default</th><th>Description</th></tr>
                   </thead>
                   <tbody>
                     <tr><td><code>--folder</code></td><td><span class="default">inbox</span></td><td>Folder to search</td></tr>
                     <tr><td><code>--query</code></td><td><span class="default">-</span></td><td>Free text search (subject/body)</td></tr>
                     <tr><td><code>--from</code></td><td><span class="default">-</span></td><td>Filter by sender</td></tr>
+                    <tr><td><code>--to</code></td><td><span class="default">-</span></td><td>Filter by To recipient <span class="label label-new">new</span></td></tr>
+                    <tr><td><code>--cc</code></td><td><span class="default">-</span></td><td>Filter by CC recipient <span class="label label-new">new</span></td></tr>
                     <tr><td><code>--subject-contains</code></td><td><span class="default">-</span></td><td>Filter by subject text</td></tr>
                     <tr><td><code>--unread-only</code></td><td><span class="default">false</span></td><td>Only unread messages</td></tr>
+                    <tr><td><code>--has-attachments</code></td><td><span class="default">false</span></td><td>Only with attachments <span class="label label-new">new</span></td></tr>
+                    <tr><td><code>--no-attachments</code></td><td><span class="default">false</span></td><td>Only without attachments <span class="label label-new">new</span></td></tr>
                     <tr><td><code>--since</code></td><td><span class="default">-</span></td><td>ISO date filter (after)</td></tr>
                     <tr><td><code>--until</code></td><td><span class="default">-</span></td><td>ISO date filter (before)</td></tr>
                     <tr><td><code>--count</code></td><td><span class="default">50</span></td><td>Maximum results</td></tr>
@@ -990,18 +952,14 @@
                 <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">draft</span> \
   <span class="syn-flag">--to</span> <span class="syn-string">"recipient@example.com"</span> \
   <span class="syn-flag">--subject</span> <span class="syn-string">"Meeting Follow-up"</span> \
-  <span class="syn-flag">--body-text</span> <span class="syn-string">"Thank you for the meeting."</span> \
-  <span class="syn-flag">--attach</span> <span class="syn-string">"./report.pdf"</span></div>
+  <span class="syn-flag">--body-text</span> <span class="syn-string">"Thank you for the meeting."</span></div>
               </div>
 
               <div class="subsection">
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Description</th></tr>
                   </thead>
                   <tbody>
                     <tr><td><code>--to</code></td><td>To recipients (comma-separated)</td></tr>
@@ -1009,10 +967,11 @@
                     <tr><td><code>--bcc</code></td><td>BCC recipients (comma-separated)</td></tr>
                     <tr><td><code>--subject</code></td><td>Email subject</td></tr>
                     <tr><td><code>--body-text</code></td><td>Plain text body</td></tr>
-                    <tr><td><code>--body-html</code></td><td>HTML body (mutually exclusive with --body-text)</td></tr>
+                    <tr><td><code>--body-html</code></td><td>HTML body</td></tr>
                     <tr><td><code>--attach</code></td><td>File path to attach (repeatable)</td></tr>
                     <tr><td><code>--reply-to-id</code></td><td>Entry ID of message to reply to</td></tr>
                     <tr><td><code>--reply-to-store</code></td><td>Store ID of message to reply to</td></tr>
+                    <tr><td><code>--reply-all</code></td><td>Reply-all instead of reply <span class="label label-new">new</span></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1053,16 +1012,181 @@
                 <h4>Safety Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Description</th></tr>
                   </thead>
                   <tbody>
                     <tr><td><code>--confirm-send</code></td><td>Must be exactly "YES" to proceed</td></tr>
                     <tr><td><code>--confirm-send-file</code></td><td>Path to file containing "YES"</td></tr>
-                    <tr><td><code>--unsafe-send-new</code></td><td>Required flag for sending new message directly</td></tr>
+                    <tr><td><code>--unsafe-send-new</code></td><td>Required for sending new message directly</td></tr>
                     <tr><td><code>--log-body</code></td><td>Include body in audit log</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Move (NEW) -->
+        <section id="move" class="section">
+          <div class="command-card new-feature">
+            <div class="command-header">
+              <span class="command-name">outlookctl move</span>
+              <div class="command-badges">
+                <span class="command-type">email</span>
+                <span class="command-type new">new</span>
+              </div>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Move a message to another folder. Returns the new message ID after moving.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">move</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--dest</span> <span class="syn-string">"by-name:Archive"</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Message entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Message store ID</td></tr>
+                    <tr><td><code>--dest</code></td><td><span class="label label-required">Required</span></td><td>Destination folder (same specs as list)</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Delete (NEW) -->
+        <section id="delete" class="section">
+          <div class="command-card new-feature">
+            <div class="command-header">
+              <span class="command-name">outlookctl delete</span>
+              <div class="command-badges">
+                <span class="command-type">email</span>
+                <span class="command-type new">new</span>
+              </div>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Delete a message. By default moves to Deleted Items; use --permanent to skip the trash.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">delete</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Message entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Message store ID</td></tr>
+                    <tr><td><code>--permanent</code></td><td><span class="label label-optional">Optional</span></td><td>Permanently delete (skip Deleted Items)</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mark Read (NEW) -->
+        <section id="mark-read" class="section">
+          <div class="command-card new-feature">
+            <div class="command-header">
+              <span class="command-name">outlookctl mark-read</span>
+              <div class="command-badges">
+                <span class="command-type">email</span>
+                <span class="command-type new">new</span>
+              </div>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Mark a message as read or unread.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-comment"># Mark as read</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">mark-read</span> <span class="syn-flag">--id</span> <span class="syn-string">"..."</span> <span class="syn-flag">--store</span> <span class="syn-string">"..."</span>
+
+<span class="syn-comment"># Mark as unread</span>
+<span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">mark-read</span> <span class="syn-flag">--id</span> <span class="syn-string">"..."</span> <span class="syn-flag">--store</span> <span class="syn-string">"..."</span> <span class="syn-flag">--unread</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Message entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Message store ID</td></tr>
+                    <tr><td><code>--unread</code></td><td><span class="label label-optional">Optional</span></td><td>Mark as unread instead of read</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Forward (NEW) -->
+        <section id="forward" class="section">
+          <div class="command-card new-feature">
+            <div class="command-header">
+              <span class="command-name">outlookctl forward</span>
+              <div class="command-badges">
+                <span class="command-type">email</span>
+                <span class="command-type new">new</span>
+              </div>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Create a forward draft for a message. The forward is saved as a draft for review before sending.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">forward</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--to</span> <span class="syn-string">"colleague@example.com"</span> \
+  <span class="syn-flag">--message</span> <span class="syn-string">"FYI - see below"</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Original message entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Original message store ID</td></tr>
+                    <tr><td><code>--to</code></td><td><span class="label label-required">Required</span></td><td>To recipients (comma-separated)</td></tr>
+                    <tr><td><code>--cc</code></td><td><span class="label label-optional">Optional</span></td><td>CC recipients</td></tr>
+                    <tr><td><code>--bcc</code></td><td><span class="label label-optional">Optional</span></td><td>BCC recipients</td></tr>
+                    <tr><td><code>--message</code></td><td><span class="label label-optional">Optional</span></td><td>Additional text to prepend</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1095,11 +1219,7 @@
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Required</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
                   </thead>
                   <tbody>
                     <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Message entry ID</td></tr>
@@ -1136,18 +1256,14 @@
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Default</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Default</th><th>Description</th></tr>
                   </thead>
                   <tbody>
-                    <tr><td><code>--start</code></td><td><span class="default">today</span></td><td>Start date (YYYY-MM-DD or YYYY-MM-DD HH:MM)</td></tr>
+                    <tr><td><code>--start</code></td><td><span class="default">today</span></td><td>Start date</td></tr>
                     <tr><td><code>--end</code></td><td><span class="default">-</span></td><td>End date (overrides --days)</td></tr>
                     <tr><td><code>--days</code></td><td><span class="default">7</span></td><td>Number of days from start</td></tr>
-                    <tr><td><code>--calendar</code></td><td><span class="default">-</span></td><td>Email address for shared calendar</td></tr>
-                    <tr><td><code>--count</code></td><td><span class="default">100</span></td><td>Maximum events to return</td></tr>
+                    <tr><td><code>--calendar</code></td><td><span class="default">-</span></td><td>Email for shared calendar</td></tr>
+                    <tr><td><code>--count</code></td><td><span class="default">100</span></td><td>Maximum events</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1163,7 +1279,7 @@
               <span class="command-type calendar">calendar</span>
             </div>
             <div class="command-body">
-              <p class="command-desc">Get detailed information about a calendar event including attendees, recurrence, and body.</p>
+              <p class="command-desc">Get detailed information about a calendar event including attendees and recurrence.</p>
 
               <div class="code-block">
                 <div class="code-header">
@@ -1174,24 +1290,6 @@
   <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
   <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
   <span class="syn-flag">--include-body</span></div>
-              </div>
-
-              <div class="subsection">
-                <h4>Options</h4>
-                <table class="options-table">
-                  <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Required</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Event entry ID</td></tr>
-                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Event store ID</td></tr>
-                    <tr><td><code>--include-body</code></td><td><span class="label label-optional">Optional</span></td><td>Include event description</td></tr>
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
@@ -1205,7 +1303,7 @@
               <span class="command-type calendar">calendar</span>
             </div>
             <div class="command-body">
-              <p class="command-desc">Create a calendar event or meeting. Meetings with attendees are saved as drafts - invitations are not sent automatically.</p>
+              <p class="command-desc">Create a calendar event or meeting. Meetings with attendees are saved as drafts.</p>
 
               <div class="code-block">
                 <div class="code-header">
@@ -1216,7 +1314,6 @@
   <span class="syn-flag">--subject</span> <span class="syn-string">"Team Sync"</span> \
   <span class="syn-flag">--start</span> <span class="syn-string">"2025-01-20 10:00"</span> \
   <span class="syn-flag">--duration</span> <span class="syn-value">60</span> \
-  <span class="syn-flag">--location</span> <span class="syn-string">"Room A"</span> \
   <span class="syn-flag">--attendees</span> <span class="syn-string">"alice@example.com,bob@example.com"</span></div>
               </div>
 
@@ -1224,45 +1321,21 @@
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Default</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Default</th><th>Description</th></tr>
                   </thead>
                   <tbody>
                     <tr><td><code>--subject</code></td><td><span class="label label-required">Required</span></td><td>Event title</td></tr>
-                    <tr><td><code>--start</code></td><td><span class="label label-required">Required</span></td><td>Start time (YYYY-MM-DD HH:MM)</td></tr>
+                    <tr><td><code>--start</code></td><td><span class="label label-required">Required</span></td><td>Start time</td></tr>
                     <tr><td><code>--duration</code></td><td><span class="default">60</span></td><td>Duration in minutes</td></tr>
-                    <tr><td><code>--end</code></td><td><span class="default">-</span></td><td>End time (overrides duration)</td></tr>
-                    <tr><td><code>--location</code></td><td><span class="default">-</span></td><td>Event location</td></tr>
-                    <tr><td><code>--body</code></td><td><span class="default">-</span></td><td>Event description</td></tr>
-                    <tr><td><code>--attendees</code></td><td><span class="default">-</span></td><td>Required attendees (comma-separated)</td></tr>
-                    <tr><td><code>--optional-attendees</code></td><td><span class="default">-</span></td><td>Optional attendees (comma-separated)</td></tr>
-                    <tr><td><code>--all-day</code></td><td><span class="default">false</span></td><td>Create as all-day event</td></tr>
-                    <tr><td><code>--reminder</code></td><td><span class="default">15</span></td><td>Reminder minutes before</td></tr>
-                    <tr><td><code>--busy-status</code></td><td><span class="default">busy</span></td><td>free, tentative, busy, out_of_office, working_elsewhere</td></tr>
-                    <tr><td><code>--teams-url</code></td><td><span class="default">-</span></td><td>Teams URL to embed in body</td></tr>
-                    <tr><td><code>--recurrence</code></td><td><span class="default">-</span></td><td>Recurrence pattern (see below)</td></tr>
+                    <tr><td><code>--end</code></td><td><span class="default">-</span></td><td>End time</td></tr>
+                    <tr><td><code>--location</code></td><td><span class="default">-</span></td><td>Location</td></tr>
+                    <tr><td><code>--attendees</code></td><td><span class="default">-</span></td><td>Required attendees</td></tr>
+                    <tr><td><code>--optional-attendees</code></td><td><span class="default">-</span></td><td>Optional attendees</td></tr>
+                    <tr><td><code>--all-day</code></td><td><span class="default">false</span></td><td>All-day event</td></tr>
+                    <tr><td><code>--busy-status</code></td><td><span class="default">busy</span></td><td>free, tentative, busy, etc.</td></tr>
+                    <tr><td><code>--recurrence</code></td><td><span class="default">-</span></td><td>Recurrence pattern</td></tr>
                   </tbody>
                 </table>
-              </div>
-
-              <div class="subsection">
-                <h4>Recurrence Patterns</h4>
-                <div class="code-block">
-                  <div class="code-header">
-                    <span class="code-lang">examples</span>
-                  </div>
-                  <div class="code-content"><span class="syn-comment"># Weekly on Monday and Wednesday until end of year</span>
-<span class="syn-flag">--recurrence</span> <span class="syn-string">"weekly:monday,wednesday:until:2025-12-31"</span>
-
-<span class="syn-comment"># Daily for 10 occurrences</span>
-<span class="syn-flag">--recurrence</span> <span class="syn-string">"daily:count:10"</span>
-
-<span class="syn-comment"># Monthly on the 15th</span>
-<span class="syn-flag">--recurrence</span> <span class="syn-string">"monthly:day:15:until:2025-06-01"</span></div>
-                </div>
               </div>
             </div>
           </div>
@@ -1276,12 +1349,12 @@
               <span class="command-type calendar">calendar</span>
             </div>
             <div class="command-body">
-              <p class="command-desc">Send meeting invitations for an existing event. <strong>Requires explicit confirmation.</strong></p>
+              <p class="command-desc">Send meeting invitations. <strong>Requires explicit confirmation.</strong></p>
 
               <div class="info-box warning">
                 <span class="info-box-icon">&#9888;</span>
                 <div class="info-box-content">
-                  <strong>Safety:</strong> Sending invitations requires <code>--confirm-send YES</code>. Review the meeting details before sending.
+                  <strong>Safety:</strong> Sending invitations requires <code>--confirm-send YES</code>.
                 </div>
               </div>
 
@@ -1295,25 +1368,6 @@
   <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
   <span class="syn-flag">--confirm-send</span> <span class="syn-value">YES</span></div>
               </div>
-
-              <div class="subsection">
-                <h4>Options</h4>
-                <table class="options-table">
-                  <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Required</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Event entry ID</td></tr>
-                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Event store ID</td></tr>
-                    <tr><td><code>--confirm-send</code></td><td><span class="label label-required">Required</span></td><td>Must be exactly "YES"</td></tr>
-                    <tr><td><code>--confirm-send-file</code></td><td><span class="label label-optional">Optional</span></td><td>Path to file containing "YES"</td></tr>
-                  </tbody>
-                </table>
-              </div>
             </div>
           </div>
         </section>
@@ -1326,7 +1380,7 @@
               <span class="command-type calendar">calendar</span>
             </div>
             <div class="command-body">
-              <p class="command-desc">Respond to a meeting invitation. Sends your response to the organizer by default.</p>
+              <p class="command-desc">Respond to a meeting invitation.</p>
 
               <div class="code-block">
                 <div class="code-header">
@@ -1343,17 +1397,100 @@
                 <h4>Options</h4>
                 <table class="options-table">
                   <thead>
-                    <tr>
-                      <th>Option</th>
-                      <th>Required</th>
-                      <th>Description</th>
-                    </tr>
+                    <tr><th>Option</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--response</code></td><td>accept, decline, or tentative</td></tr>
+                    <tr><td><code>--no-response</code></td><td>Don't send response to organizer</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Update (NEW) -->
+        <section id="calendar-update" class="section">
+          <div class="command-card new-feature">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar update</span>
+              <div class="command-badges">
+                <span class="command-type calendar">calendar</span>
+                <span class="command-type new">new</span>
+              </div>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Update an existing calendar event. Only specified fields are modified.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar update</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--location</span> <span class="syn-string">"Room B"</span> \
+  <span class="syn-flag">--start</span> <span class="syn-string">"2025-01-20 11:00"</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
                   </thead>
                   <tbody>
                     <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Event entry ID</td></tr>
                     <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Event store ID</td></tr>
-                    <tr><td><code>--response</code></td><td><span class="label label-required">Required</span></td><td>accept, decline, or tentative</td></tr>
-                    <tr><td><code>--no-response</code></td><td><span class="label label-optional">Optional</span></td><td>Don't send response to organizer</td></tr>
+                    <tr><td><code>--subject</code></td><td><span class="label label-optional">Optional</span></td><td>New subject</td></tr>
+                    <tr><td><code>--start</code></td><td><span class="label label-optional">Optional</span></td><td>New start time</td></tr>
+                    <tr><td><code>--end</code></td><td><span class="label label-optional">Optional</span></td><td>New end time</td></tr>
+                    <tr><td><code>--duration</code></td><td><span class="label label-optional">Optional</span></td><td>New duration (minutes)</td></tr>
+                    <tr><td><code>--location</code></td><td><span class="label label-optional">Optional</span></td><td>New location</td></tr>
+                    <tr><td><code>--body</code></td><td><span class="label label-optional">Optional</span></td><td>New description</td></tr>
+                    <tr><td><code>--reminder</code></td><td><span class="label label-optional">Optional</span></td><td>New reminder (minutes)</td></tr>
+                    <tr><td><code>--busy-status</code></td><td><span class="label label-optional">Optional</span></td><td>New show-as status</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Delete (NEW) -->
+        <section id="calendar-delete" class="section">
+          <div class="command-card new-feature">
+            <div class="command-header">
+              <span class="command-name">outlookctl calendar delete</span>
+              <div class="command-badges">
+                <span class="command-type calendar">calendar</span>
+                <span class="command-type new">new</span>
+              </div>
+            </div>
+            <div class="command-body">
+              <p class="command-desc">Delete a calendar event. For meetings you organized, sends cancellation to attendees by default.</p>
+
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">bash</span>
+                  <button class="code-copy">Copy</button>
+                </div>
+                <div class="code-content"><span class="syn-cmd">uv run python -m outlookctl.cli</span> <span class="syn-flag">calendar delete</span> \
+  <span class="syn-flag">--id</span> <span class="syn-string">"00000..."</span> \
+  <span class="syn-flag">--store</span> <span class="syn-string">"00000..."</span></div>
+              </div>
+
+              <div class="subsection">
+                <h4>Options</h4>
+                <table class="options-table">
+                  <thead>
+                    <tr><th>Option</th><th>Required</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>--id</code></td><td><span class="label label-required">Required</span></td><td>Event entry ID</td></tr>
+                    <tr><td><code>--store</code></td><td><span class="label label-required">Required</span></td><td>Event store ID</td></tr>
+                    <tr><td><code>--no-cancel</code></td><td><span class="label label-optional">Optional</span></td><td>Don't send cancellation to attendees</td></tr>
                   </tbody>
                 </table>
               </div>
