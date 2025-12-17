@@ -7,9 +7,18 @@ Logs are stored in %LOCALAPPDATA%/outlookctl/audit.log on Windows.
 
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+
+def _warn_audit_failure(operation: str, error: Exception) -> None:
+    """Emit a warning to stderr when audit logging fails."""
+    print(
+        f"Warning: Failed to write audit log for {operation}: {error}",
+        file=sys.stderr,
+    )
 
 
 def get_audit_log_path() -> Path:
@@ -79,10 +88,9 @@ def log_send_operation(
     try:
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry) + "\n")
-    except OSError:
-        # Silently fail if we can't write to log
-        # The operation should still succeed
-        pass
+    except OSError as e:
+        # Warn but don't fail - the operation should still succeed
+        _warn_audit_failure("send", e)
 
 
 def log_draft_operation(
@@ -128,5 +136,6 @@ def log_draft_operation(
     try:
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry) + "\n")
-    except OSError:
-        pass
+    except OSError as e:
+        # Warn but don't fail - the operation should still succeed
+        _warn_audit_failure("draft", e)

@@ -97,6 +97,10 @@ uv run python -m outlookctl.cli calendar create --subject "Focus Time" --start "
 | `search` | Search messages with filters |
 | `draft` | Create a draft message |
 | `send` | Send a draft or new message |
+| `move` | Move message to another folder |
+| `delete` | Delete a message |
+| `mark-read` | Mark message as read/unread |
+| `forward` | Create a forward draft |
 | `attachments save` | Save attachments to disk |
 
 ### Calendar Commands
@@ -108,6 +112,8 @@ uv run python -m outlookctl.cli calendar create --subject "Focus Time" --start "
 | `calendar create` | Create an event or meeting |
 | `calendar send` | Send meeting invitations |
 | `calendar respond` | Accept/decline/tentative response |
+| `calendar update` | Update an existing event |
+| `calendar delete` | Delete/cancel an event |
 
 See [CLI Reference](https://gmickel.github.io/outlookctl/cli.html) for full documentation.
 

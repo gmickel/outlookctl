@@ -212,6 +212,96 @@ class AttachmentSaveResult:
 
 
 @dataclass
+class MoveResult:
+    """Result of moving a message."""
+    version: str = "1.0"
+    success: bool = True
+    message: str = ""
+    id: Optional[MessageId] = None
+    moved_to: Optional[str] = None
+    subject: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        result = {
+            "version": self.version,
+            "success": self.success,
+            "message": self.message,
+        }
+        if self.id:
+            result["id"] = self.id.to_dict()
+        if self.moved_to:
+            result["moved_to"] = self.moved_to
+        if self.subject:
+            result["subject"] = self.subject
+        return result
+
+
+@dataclass
+class DeleteResult:
+    """Result of deleting a message."""
+    version: str = "1.0"
+    success: bool = True
+    message: str = ""
+    subject: Optional[str] = None
+    permanent: bool = False
+
+    def to_dict(self) -> dict:
+        result = {
+            "version": self.version,
+            "success": self.success,
+            "message": self.message,
+            "permanent": self.permanent,
+        }
+        if self.subject:
+            result["subject"] = self.subject
+        return result
+
+
+@dataclass
+class MarkReadResult:
+    """Result of marking messages as read/unread."""
+    version: str = "1.0"
+    success: bool = True
+    message: str = ""
+    count: int = 0
+    marked_as: str = "read"  # "read" or "unread"
+
+    def to_dict(self) -> dict:
+        return {
+            "version": self.version,
+            "success": self.success,
+            "message": self.message,
+            "count": self.count,
+            "marked_as": self.marked_as,
+        }
+
+
+@dataclass
+class ForwardResult:
+    """Result of creating a forward draft."""
+    version: str = "1.0"
+    success: bool = True
+    id: Optional[MessageId] = None
+    saved_to: str = "Drafts"
+    original_subject: Optional[str] = None
+    to: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        result = {
+            "version": self.version,
+            "success": self.success,
+            "saved_to": self.saved_to,
+        }
+        if self.id:
+            result["id"] = self.id.to_dict()
+        if self.original_subject:
+            result["original_subject"] = self.original_subject
+        if self.to:
+            result["to"] = self.to
+        return result
+
+
+@dataclass
 class DoctorCheck:
     """Single check result for doctor command."""
     name: str
@@ -479,6 +569,54 @@ class EventRespondResult:
             result["subject"] = self.subject
         if self.organizer:
             result["organizer"] = self.organizer
+        return result
+
+
+@dataclass
+class EventUpdateResult:
+    """Result of updating a calendar event."""
+    version: str = "1.0"
+    success: bool = True
+    message: str = ""
+    id: Optional[EventId] = None
+    subject: Optional[str] = None
+    start: Optional[str] = None
+    updated_fields: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        result = {
+            "version": self.version,
+            "success": self.success,
+            "message": self.message,
+            "updated_fields": self.updated_fields,
+        }
+        if self.id:
+            result["id"] = self.id.to_dict()
+        if self.subject:
+            result["subject"] = self.subject
+        if self.start:
+            result["start"] = self.start
+        return result
+
+
+@dataclass
+class EventDeleteResult:
+    """Result of deleting a calendar event."""
+    version: str = "1.0"
+    success: bool = True
+    message: str = ""
+    subject: Optional[str] = None
+    cancelled: bool = False  # True if meeting cancellation sent
+
+    def to_dict(self) -> dict:
+        result = {
+            "version": self.version,
+            "success": self.success,
+            "message": self.message,
+            "cancelled": self.cancelled,
+        }
+        if self.subject:
+            result["subject"] = self.subject
         return result
 
 
