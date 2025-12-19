@@ -119,7 +119,9 @@ See [CLI Reference](https://gmickel.github.io/outlookctl/cli.html) for full docu
 
 ## Installing the Skill
 
-The skill enables AI assistants (Claude Code or OpenAI Codex) to assist with email and calendar operations safely.
+The skill enables AI assistants (Claude Code, OpenAI Codex, or VS Code) to assist with email and calendar operations safely.
+
+> **Note:** Agent Skills support in VS Code is currently in preview and only available in VS Code Insiders. Enable the `chat.useAgentSkills` setting to use Agent Skills.
 
 ### Claude Code - Personal Installation
 
