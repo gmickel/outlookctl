@@ -1,5 +1,7 @@
 # outlookctl
 
+> **🔍 Also check out [GNO](https://gno.sh)** ([gmickel/gno](https://github.com/gmickel/gno)) - Local semantic search for your documents, notes, and knowledge base. Combines perfectly with outlookctl: let Claude search your emails *and* your local files. Same privacy-first, local-only philosophy.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
